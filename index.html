@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Famous Person</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #3498db;
+            --dark-blue: #2980b9;
+            --light-blue: #ecf0f1;
+            --accent-green: #2ecc71;
+            --text-dark: #2c3e50;
+            --text-light: #ffffff;
+            --background-light: #f4f7f6;
+            --card-background: #ffffff;
+            --border-color: #bdc3c7;
+            --shadow-light: 0 8px 25px rgba(0, 0, 0, 0.15);
+            --shadow-dark: 0 12px 35px rgba(0, 0, 0, 0.25);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--light-blue), var(--background-light));
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            color: var(--text-dark);
+            overflow: hidden; /* Prevent scrollbar from background gradient */
+        }
+
+        .game-container {
+            background-color: var(--card-background);
+            border-radius: 25px;
+            box-shadow: var(--shadow-light);
+            padding: 40px;
+            width: 100%;
+            max-width: 550px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .game-container:hover {
+            box-shadow: var(--shadow-dark);
+        }
+
+        h1 {
+            color: var(--primary-blue);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .clue-box {
+            background: linear-gradient(145deg, #e0f2f7, #c6e9f0); /* Softer gradient */
+            border: 2px solid var(--primary-blue);
+            border-radius: 18px;
+            padding: 25px;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start; /* Align clues to the left */
+            font-size: 1.15em;
+            color: var(--text-dark);
+            font-weight: 500;
+            text-align: left;
+            overflow-y: auto;
+            max-height: 280px;
+            gap: 12px;
+            box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .clue-box:hover {
+            transform: translateY(-2px);
+            box-shadow: inset 0 5px 10px rgba(0, 0, 0, 0.12);
+        }
+
+        .clue-item {
+            padding: 5px 0;
+            border-bottom: 1px dashed rgba(var(--primary-blue), 0.4);
+            width: 100%;
+            text-align: left;
+            opacity: 0; /* Initially hidden for animation */
+            animation: fadeInClue 0.5s forwards;
+        }
+
+        .clue-item:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes fadeInClue {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        input[type="text"] {
+            padding: 18px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1.1em;
+            width: calc(100% - 40px); /* Account for padding */
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            outline: none;
+            color: var(--text-dark);
+            background-color: var(--background-light);
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.4);
+            background-color: var(--card-background);
+        }
+
+        button {
+            background: linear-gradient(145deg, var(--primary-blue), var(--dark-blue));
+            color: var(--text-light);
+            padding: 16px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.15em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.02em;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 9px 25px rgba(0, 0, 0, 0.35);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        button#newGame {
+            background: linear-gradient(145deg, var(--accent-green), #27ae60);
+        }
+
+        .message-box {
+            min-height: 40px;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-dark);
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid var(--primary-blue); /* Blue */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 25px;
+                gap: 20px;
+                border-radius: 18px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            input[type="text"], button {
+                font-size: 1em;
+                padding: 14px;
+                border-radius: 10px;
+            }
+
+            .clue-box, .message-box {
+                font-size: 0.95em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Guess the Famous Person</h1>
+        <div class="clue-box" id="clues">
+            <!-- Clues will appear here -->
+        </div>
+        <div class="loading-spinner" id="loadingSpinner"></div>
+        <input type="text" id="guessInput" placeholder="Enter your guess...">
+        <button id="submitGuess">Submit Guess</button>
+        <div class="message-box" id="message"></div>
+        <button id="newGame" style="background: linear-gradient(145deg, #4CAF50, #2E8B57);">New Game</button>
+    </div>
+
+    <script>
+        const guessInput = document.getElementById('guessInput');
+        const submitGuessBtn = document.getElementById('submitGuess');
+        const newGameBtn = document.getElementById('newGame');
+        const cluesDiv = document.getElementById('clues');
+        const messageDiv = document.getElementById('message');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        // Global variables for game state
+        let famousPeople = [
+            "Taylor Swift", "Beyoncé", "Elon Musk", "Mark Zuckerberg",
+            "LeBron James", "Rihanna", "Dwayne Johnson", "Kim Kardashian",
+            "Billie Eilish", "Harry Styles", "Greta Thunberg", "Malala Yousafzai",
+            "Ed Sheeran", "Adele", "Travis Scott", "Ariana Grande",
+            "Lionel Messi", "Cristiano Ronaldo", "Serena Williams", "Oprah Winfrey" // Still relevant post-2000s
+        ];
+        let currentPerson = {};
+        let currentClueIndex = 0;
+        let maxClues = 5; // We'll ask the LLM for 5 clues
+
+        // Function to display messages to the user
+        function displayMessage(msg, color = 'initial') {
+            messageDiv.textContent = msg;
+            messageDiv.style.color = color;
+            // Apply a subtle bounce animation for new messages
+            messageDiv.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                messageDiv.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        // Function to update the displayed clues
+        function updateClues() {
+            cluesDiv.innerHTML = ''; // Clear previous clues
+            if (currentPerson.clues && currentPerson.clues.length > 0) {
+                for (let i = 0; i <= currentClueIndex && i < currentPerson.clues.length; i++) {
+                    const clueItem = document.createElement('div');
+                    clueItem.classList.add('clue-item');
+                    clueItem.textContent = `Clue ${i + 1}: ${currentPerson.clues[i]}`;
+                    cluesDiv.appendChild(clueItem);
+                }
+            } else {
+                cluesDiv.textContent = 'No clues available yet. Please wait...';
+            }
+        }
+
+        // Function to fetch clues from the LLM
+        async function fetchClues(personName) {
+            loadingSpinner.style.display = 'block'; // Show spinner
+            displayMessage('Generating clues, please wait...', 'var(--primary-blue)');
+            cluesDiv.innerHTML = ''; // Clear clues while loading
+
+            try {
+                // Construct the prompt for the LLM
+                const prompt = `Generate ${maxClues} progressive text clues for the famous person "${personName}". The first clue should be very vague, and subsequent clues should become progressively more specific, leading to the person. Ensure the clues are distinct and provide useful hints without directly revealing the answer too early. Format them as a JSON array of strings.`;
+
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = {
+                    contents: chatHistory,
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "ARRAY",
+                            items: { "type": "STRING" }
+                        }
+                    }
+                };
+
+                // Canvas provides __app_id, __firebase_config, __initial_auth_token
+                const apiKey = ""; // Canvas will automatically provide the API key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                console.log("LLM Response for Clues:", result);
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const jsonString = result.candidates[0].content.parts[0].text;
+                    const parsedClues = JSON.parse(jsonString);
+                    if (Array.isArray(parsedClues)) {
+                        return parsedClues;
+                    } else {
+                        console.error("LLM returned non-array clues:", parsedClues);
+                        return ["Failed to generate clues. Try again."];
+                    }
+                } else {
+                    console.error("LLM response structure unexpected for clues:", result);
+                    return ["Could not generate clues. Please try a new game."];
+                }
+
+            } catch (error) {
+                console.error("Error fetching clues from LLM:", error);
+                return ["Error generating clues. Check console for details."];
+            } finally {
+                loadingSpinner.style.display = 'none'; // Hide spinner
+            }
+        }
+
+        // Function to fetch a "hotter or colder" hint from the LLM
+        async function fetchHint(incorrectGuess, correctPersonName) {
+            loadingSpinner.style.display = 'block'; // Show spinner
+            displayMessage('Generating hint...', 'var(--primary-blue)');
+
+            try {
+                const prompt = `The correct answer is "${correctPersonName}". The user guessed "${incorrectGuess}". Provide a short "hotter or colder" hint based on their guess. Focus on categories like theme (e.g., music, tech, sports), occupation, or general age group. Keep it concise.`;
+
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = {
+                    contents: chatHistory
+                };
+
+                const apiKey = ""; // Canvas will automatically provide the API key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                console.log("LLM Response for Hint:", result);
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    console.error("LLM response structure unexpected for hint:", result);
+                    return "No specific hint available.";
+                }
+
+            } catch (error) {
+                console.error("Error fetching hint from LLM:", error);
+                return "Failed to get a hint.";
+            } finally {
+                loadingSpinner.style.display = 'none'; // Hide spinner
+            }
+        }
+
+        // Function to start a new game
+        async function startNewGame() {
+            // Reset game state
+            currentClueIndex = 0;
+            guessInput.value = '';
+            guessInput.disabled = false;
+            submitGuessBtn.disabled = false;
+            displayMessage('Guess the famous person!', 'var(--text-dark)');
+            cluesDiv.innerHTML = ''; // Clear clues immediately
+
+            // Pick a random famous person
+            const randomIndex = Math.floor(Math.random() * famousPeople.length);
+            const personName = famousPeople[randomIndex];
+            currentPerson = { name: personName, clues: [] }; // Initialize with empty clues
+
+            // Fetch clues for the chosen person
+            const clues = await fetchClues(personName);
+            currentPerson.clues = clues;
+
+            // Display the first clue
+            if (currentPerson.clues.length > 0) {
+                updateClues();
+            } else {
+                displayMessage('Failed to load clues. Please try a new game.', 'red');
+                guessInput.disabled = true;
+                submitGuessBtn.disabled = true;
+            }
+        }
+
+        // Event listener for submitting a guess
+        submitGuessBtn.addEventListener('click', async () => { // Made async to await fetchHint
+            const guess = guessInput.value.trim();
+            if (!guess) {
+                displayMessage('Please enter a guess!', 'orange');
+                return;
+            }
+
+            // Clean and normalize both the guess and the correct answer for flexible comparison.
+            const cleanGuess = guess.toLowerCase()
+                                  .replace(/^(mr\.|ms\.|mrs\.|dr\.)\s+/i, '')
+                                  .replace(/\s+(jr\.|sr\.|iii|ii)$/i, '')
+                                  .replace(/[^a-z0-9\s]/g, '')
+                                  .trim();
+
+            const cleanAnswer = currentPerson.name.toLowerCase()
+                                   .replace(/^(mr\.|ms\.|mrs\.|dr\.)\s+/i, '')
+                                   .replace(/\s+(jr\.|sr\.|iii|ii)$/i, '')
+                                   .replace(/[^a-z0-9\s]/g, '')
+                                   .trim();
+
+            let isCorrect = false;
+
+            // Condition 1: Exact match of the cleaned strings (e.g., "taylor swift" vs "taylor swift")
+            if (cleanGuess === cleanAnswer) {
+                isCorrect = true;
+            } else {
+                // Condition 2: Check if the cleaned answer contains the cleaned guess as a substring.
+                if (cleanGuess.length > 0 && cleanAnswer.includes(cleanGuess)) {
+                    isCorrect = true;
+                } else {
+                    // Condition 3: Check for word-level matching, allowing for different word orders.
+                    const guessWords = cleanGuess.split(/\s+/).filter(word => word.length > 0);
+                    const answerWords = cleanAnswer.split(/\s+/).filter(word => word.length > 0);
+
+                    if (guessWords.length > 0 && guessWords.every(word => answerWords.includes(word))) {
+                        isCorrect = true;
+                    }
+                }
+            }
+
+            if (isCorrect) {
+                displayMessage(`Congratulations! You guessed "${currentPerson.name}" correctly!`, 'var(--accent-green)');
+                guessInput.disabled = true;
+                submitGuessBtn.disabled = true;
+            } else {
+                if (currentClueIndex < maxClues -1) { // -1 because we reveal the next clue after this wrong guess
+                    currentClueIndex++;
+                    const hint = await fetchHint(guess, currentPerson.name); // Fetch hint
+                    displayMessage(`Incorrect! ${hint} Revealing Clue ${currentClueIndex + 1}.`, 'red');
+                    updateClues();
+                } else {
+                    displayMessage(`Game over! The person was "${currentPerson.name}". Better luck next time!`, 'red');
+                    guessInput.disabled = true;
+                    submitGuessBtn.disabled = true;
+                }
+            }
+            guessInput.value = ''; // Clear input after guess
+        });
+
+        // Allow pressing Enter to submit guess
+        guessInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default form submission
+                submitGuessBtn.click();
+            }
+        });
+
+        // Event listener for starting a new game
+        newGameBtn.addEventListener('click', startNewGame);
+
+        // Initialize the game when the page loads
+        window.onload = startNewGame;
+    </script>
+</body>
+</html>
