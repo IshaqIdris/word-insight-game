@@ -124,6 +124,12 @@
             background-color: var(--card-background);
         }
 
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
         button {
             background: linear-gradient(145deg, var(--primary-blue), var(--dark-blue));
             color: var(--text-light);
@@ -154,6 +160,12 @@
             background: linear-gradient(145deg, var(--accent-green), #27ae60);
         }
 
+        button#shareButton {
+            background: linear-gradient(145deg, #f39c12, #e67e22); /* Orange/Yellow gradient */
+            display: none; /* Hidden by default */
+        }
+
+
         .message-box {
             min-height: 40px;
             font-size: 1.1em;
@@ -170,7 +182,7 @@
             height: 30px;
             animation: spin 1s linear infinite;
             margin: 0 auto;
-            display: none;
+            display: none; /* Hidden by default */
         }
 
         @keyframes spin {
@@ -212,34 +224,133 @@
         <input type="text" id="guessInput" placeholder="Enter your guess...">
         <button id="submitGuess">Submit Guess</button>
         <div class="message-box" id="message"></div>
-        <button id="newGame" style="background: linear-gradient(145deg, #4CAF50, #2E8B57);">New Game</button>
+        <div class="button-group">
+            <button id="shareButton">Share Result</button>
+            <button id="newGame" style="background: linear-gradient(145deg, #4CAF50, #2E8B57);">New Game</button>
+        </div>
     </div>
 
     <script>
         const guessInput = document.getElementById('guessInput');
         const submitGuessBtn = document.getElementById('submitGuess');
         const newGameBtn = document.getElementById('newGame');
+        const shareButton = document.getElementById('shareButton'); // New share button
         const cluesDiv = document.getElementById('clues');
         const messageDiv = document.getElementById('message');
         const loadingSpinner = document.getElementById('loadingSpinner');
 
         // Global variables for game state
-        let famousPeople = [
-            "Taylor Swift", "Beyoncé", "Elon Musk", "Mark Zuckerberg",
-            "LeBron James", "Rihanna", "Dwayne Johnson", "Kim Kardashian",
-            "Billie Eilish", "Harry Styles", "Greta Thunberg", "Malala Yousafzai",
-            "Ed Sheeran", "Adele", "Travis Scott", "Ariana Grande",
-            "Lionel Messi", "Cristiano Ronaldo", "Serena Williams", "Oprah Winfrey" // Still relevant post-2000s
+        let famousPeopleData = [
+            {
+                name: "Taylor Swift",
+                clues: [
+                    "This person is known for their songwriting.",
+                    "They broke several streaming records in the 2020s.",
+                    "Their fans are often called 'Swifties'.",
+                    "They famously re-recorded several of their early albums.",
+                    "Their most recent album is 'The Tortured Poets Department'."
+                ]
+            },
+            {
+                name: "Beyoncé",
+                clues: [
+                    "This artist is a global music icon.",
+                    "They were part of a very famous girl group before their solo career.",
+                    "Known for powerful vocals and intricate stage performances.",
+                    "Released a visual album that broke the internet.",
+                    "Often referred to as 'Queen Bey'."
+                ]
+            },
+            {
+                name: "Elon Musk",
+                clues: [
+                    "This individual is a a prominent figure in the tech industry.",
+                    "They are involved with electric vehicles and space exploration.",
+                    "Known for controversial social media presence.",
+                    "Founder of SpaceX and Tesla.",
+                    "Owns a popular social media platform formerly known as Twitter."
+                ]
+            },
+            {
+                name: "Mark Zuckerberg",
+                clues: [
+                    "This person revolutionized social networking.",
+                    "They dropped out of Harvard University.",
+                    "Their company owns Instagram and WhatsApp.",
+                    "Known for wearing grey t-shirts.",
+                    "Co-founded Facebook."
+                ]
+            },
+            {
+                name: "LeBron James",
+                clues: [
+                    "This athlete is a living basketball legend.",
+                    "Often compared to Michael Jordan.",
+                    "Has played for the Cavaliers, Heat, and Lakers.",
+                    "Known as 'King James'.",
+                    "Holds the NBA all-time scoring record."
+                ]
+            },
+             {
+                name: "Rihanna",
+                clues: [
+                    "This artist is a successful musician and entrepreneur.",
+                    "They come from Barbados.",
+                    "Known for hits like 'Umbrella' and 'Diamonds'.",
+                    "Founder of Fenty Beauty.",
+                    "Performed at the Super Bowl LVII halftime show."
+                ]
+            },
+            {
+                name: "Dwayne Johnson",
+                clues: [
+                    "This person is a globally recognized actor and former athlete.",
+                    "Known for their muscular physique and charisma.",
+                    "Started their career in professional wrestling.",
+                    "Often referred to as 'The Rock'.",
+                    "Starred in the 'Jumanji' and 'Fast & Furious' franchises."
+                ]
+            },
+            {
+                name: "Kim Kardashian",
+                clues: [
+                    "This individual rose to fame through a reality television show.",
+                    "They are part of a well-known celebrity family.",
+                    "Known for their business ventures in fashion and beauty.",
+                    "Has a strong social media presence.",
+                    "Studied to become a lawyer."
+                ]
+            },
+            {
+                name: "Billie Eilish",
+                clues: [
+                    "This young artist gained widespread fame in the late 2010s.",
+                    "Known for their distinct vocal style and unique fashion.",
+                    "Often collaborates with their brother on music.",
+                    "Won multiple Grammy Awards for her debut album.",
+                    "Sang the theme song for a James Bond film, 'No Time to Die'."
+                ]
+            },
+            {
+                name: "Harry Styles",
+                clues: [
+                    "This artist was a member of a popular boy band.",
+                    "Known for their flamboyant fashion sense and solo music career.",
+                    "Starred in films like 'Dunkirk' and 'Don't Worry Darling'.",
+                    "Had a massive hit with the song 'Watermelon Sugar'.",
+                    "Often performs in brightly colored, glittery outfits."
+                ]
+            }
         ];
         let currentPerson = {};
         let currentClueIndex = 0;
-        let maxClues = 5; // We'll ask the LLM for 5 clues
+        let maxClues = 5;
+        let guessCount = 0; // New variable to track guesses
 
         // Function to display messages to the user
         function displayMessage(msg, color = 'initial') {
             messageDiv.textContent = msg;
             messageDiv.style.color = color;
-            // Apply a subtle bounce animation for new messages
             messageDiv.style.transform = 'scale(1.05)';
             setTimeout(() => {
                 messageDiv.style.transform = 'scale(1)';
@@ -257,110 +368,7 @@
                     cluesDiv.appendChild(clueItem);
                 }
             } else {
-                cluesDiv.textContent = 'No clues available yet. Please wait...';
-            }
-        }
-
-        // Function to fetch clues from the LLM
-        async function fetchClues(personName) {
-            loadingSpinner.style.display = 'block'; // Show spinner
-            displayMessage('Generating clues, please wait...', 'var(--primary-blue)');
-            cluesDiv.innerHTML = ''; // Clear clues while loading
-
-            try {
-                // Construct the prompt for the LLM
-                const prompt = `Generate ${maxClues} progressive text clues for the famous person "${personName}". The first clue should be very vague, and subsequent clues should become progressively more specific, leading to the person. Ensure the clues are distinct and provide useful hints without directly revealing the answer too early. Format them as a JSON array of strings.`;
-
-                let chatHistory = [];
-                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-                const payload = {
-                    contents: chatHistory,
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "ARRAY",
-                            items: { "type": "STRING" }
-                        }
-                    }
-                };
-
-                // Canvas provides __app_id, __firebase_config, __initial_auth_token
-                const apiKey = ""; // Canvas will automatically provide the API key
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await response.json();
-                console.log("LLM Response for Clues:", result);
-
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    const jsonString = result.candidates[0].content.parts[0].text;
-                    const parsedClues = JSON.parse(jsonString);
-                    if (Array.isArray(parsedClues)) {
-                        return parsedClues;
-                    } else {
-                        console.error("LLM returned non-array clues:", parsedClues);
-                        return ["Failed to generate clues. Try again."];
-                    }
-                } else {
-                    console.error("LLM response structure unexpected for clues:", result);
-                    return ["Could not generate clues. Please try a new game."];
-                }
-
-            } catch (error) {
-                console.error("Error fetching clues from LLM:", error);
-                return ["Error generating clues. Check console for details."];
-            } finally {
-                loadingSpinner.style.display = 'none'; // Hide spinner
-            }
-        }
-
-        // Function to fetch a "hotter or colder" hint from the LLM
-        async function fetchHint(incorrectGuess, correctPersonName) {
-            loadingSpinner.style.display = 'block'; // Show spinner
-            displayMessage('Generating hint...', 'var(--primary-blue)');
-
-            try {
-                const prompt = `The correct answer is "${correctPersonName}". The user guessed "${incorrectGuess}". Provide a short "hotter or colder" hint based on their guess. Focus on categories like theme (e.g., music, tech, sports), occupation, or general age group. Keep it concise.`;
-
-                let chatHistory = [];
-                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-                const payload = {
-                    contents: chatHistory
-                };
-
-                const apiKey = "AIzaSyC6QWrZzqLSIDuT-Zfta_tPqdSjedQpDY8"; // Canvas will automatically provide the API key
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await response.json();
-                console.log("LLM Response for Hint:", result);
-
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    return result.candidates[0].content.parts[0].text;
-                } else {
-                    console.error("LLM response structure unexpected for hint:", result);
-                    return "No specific hint available.";
-                }
-
-            } catch (error) {
-                console.error("Error fetching hint from LLM:", error);
-                return "Failed to get a hint.";
-            } finally {
-                loadingSpinner.style.display = 'none'; // Hide spinner
+                cluesDiv.textContent = 'No clues available. Select New Game.';
             }
         }
 
@@ -368,38 +376,53 @@
         async function startNewGame() {
             // Reset game state
             currentClueIndex = 0;
+            guessCount = 0; // Reset guess count for new game
             guessInput.value = '';
             guessInput.disabled = false;
             submitGuessBtn.disabled = false;
+            shareButton.style.display = 'none'; // Hide share button
             displayMessage('Guess the famous person!', 'var(--text-dark)');
             cluesDiv.innerHTML = ''; // Clear clues immediately
 
-            // Pick a random famous person
-            const randomIndex = Math.floor(Math.random() * famousPeople.length);
-            const personName = famousPeople[randomIndex];
-            currentPerson = { name: personName, clues: [] }; // Initialize with empty clues
-
-            // Fetch clues for the chosen person
-            const clues = await fetchClues(personName);
-            currentPerson.clues = clues;
+            // Pick a random famous person from the predefined data
+            const randomIndex = Math.floor(Math.random() * famousPeopleData.length);
+            currentPerson = famousPeopleData[randomIndex]; // Assign the whole object
 
             // Display the first clue
             if (currentPerson.clues.length > 0) {
                 updateClues();
             } else {
-                displayMessage('Failed to load clues. Please try a new game.', 'red');
+                displayMessage('Error: No clues found for this person. Try New Game.', 'red');
                 guessInput.disabled = true;
                 submitGuessBtn.disabled = true;
             }
         }
 
+        // Function to generate the share message
+        function generateShareMessage(won) {
+            let message = `I tried to guess a famous person!`;
+            if (won) {
+                message += ` I guessed "${currentPerson.name}" in ${guessCount} tries!`;
+            } else {
+                message += ` I couldn't guess "${currentPerson.name}". It took me ${guessCount} tries.`;
+            }
+            message += ` #GuessThePersonGame`; // Hashtag for social media
+            // Add a link to the game if hosted (replace with your actual GitHub Pages URL)
+            // For now, we'll assume it's just the text.
+            // message += `\nPlay it here: [YOUR_GITHUB_PAGES_URL]`;
+            return message;
+        }
+
         // Event listener for submitting a guess
-        submitGuessBtn.addEventListener('click', async () => { // Made async to await fetchHint
+        submitGuessBtn.addEventListener('click', async () => {
             const guess = guessInput.value.trim();
             if (!guess) {
                 displayMessage('Please enter a guess!', 'orange');
                 return;
             }
+
+            // Increment guess count on each attempt
+            guessCount++;
 
             // Clean and normalize both the guess and the correct answer for flexible comparison.
             const cleanGuess = guess.toLowerCase()
@@ -416,7 +439,7 @@
 
             let isCorrect = false;
 
-            // Condition 1: Exact match of the cleaned strings (e.g., "taylor swift" vs "taylor swift")
+            // Condition 1: Exact match of the cleaned strings
             if (cleanGuess === cleanAnswer) {
                 isCorrect = true;
             } else {
@@ -438,20 +461,43 @@
                 displayMessage(`Congratulations! You guessed "${currentPerson.name}" correctly!`, 'var(--accent-green)');
                 guessInput.disabled = true;
                 submitGuessBtn.disabled = true;
+                shareButton.style.display = 'block'; // Show share button on win
             } else {
-                if (currentClueIndex < maxClues -1) { // -1 because we reveal the next clue after this wrong guess
-                    currentClueIndex++;
-                    const hint = await fetchHint(guess, currentPerson.name); // Fetch hint
-                    displayMessage(`Incorrect! ${hint} Revealing Clue ${currentClueIndex + 1}.`, 'red');
+                currentClueIndex++;
+                if (currentClueIndex < maxClues && currentClueIndex < currentPerson.clues.length) {
+                    displayMessage(`Incorrect! Revealing Clue ${currentClueIndex + 1}.`, 'red');
                     updateClues();
                 } else {
                     displayMessage(`Game over! The person was "${currentPerson.name}". Better luck next time!`, 'red');
                     guessInput.disabled = true;
                     submitGuessBtn.disabled = true;
+                    shareButton.style.display = 'block'; // Show share button on loss
                 }
             }
             guessInput.value = ''; // Clear input after guess
         });
+
+        // Event listener for Share button
+        shareButton.addEventListener('click', () => {
+            let shareText;
+            // Check if the user won (guessInput is disabled and message is green)
+            if (guessInput.disabled && messageDiv.style.color === 'var(--accent-green)') {
+                shareText = generateShareMessage(true);
+            } else {
+                shareText = generateShareMessage(false);
+            }
+
+            // Copy to clipboard
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = shareText;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            displayMessage('Result copied to clipboard!', 'var(--primary-blue)');
+        });
+
 
         // Allow pressing Enter to submit guess
         guessInput.addEventListener('keydown', (event) => {
