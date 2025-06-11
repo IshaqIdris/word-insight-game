@@ -26,7 +26,7 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow: hidden; /* Prevent body scroll */
+            /* Removed overflow: hidden; to allow vertical scrolling */
         }
 
         #game-container {
@@ -127,18 +127,22 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
+        #canvas-wrapper {
+            width: 100%; /* Take full width of parent */
+            overflow-x: auto; /* Enable horizontal scrolling */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            border-radius: 15px; /* Match canvas border-radius */
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05); /* Match canvas shadow */
+        }
+
         canvas {
-            border: 2px solid #e2e8f0; /* Light border */
-            border-radius: 15px;
-            background-color: #f8fafc; /* Lighter canvas background */
+            /* Canvas dimensions will be set by JavaScript to a fixed size */
             display: block;
             touch-action: none; /* Disable default touch actions */
-            flex-grow: 1; /* Allow canvas to fill available space */
-            width: 100%; /* Make canvas responsive */
-            max-width: 860px; /* Max width matching container */
-            height: 450px; /* Fixed height for canvas, adjusted by JS for aspect ratio */
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            background-color: #f8fafc; /* Lighter canvas background */
+            /* No border/shadow here as it's on the wrapper */
         }
+
 
         #instructions {
             margin-top: 20px;
@@ -247,7 +251,8 @@
                 font-size: 1rem;
             }
             canvas {
-                height: 350px; /* Smaller canvas height on mobile */
+                /* On smaller screens, allow canvas to overflow, maintaining its fixed size */
+                /* Height can still be somewhat responsive if needed, but width is fixed */
             }
             #instructions {
                 font-size: 0.85rem;
@@ -284,7 +289,7 @@
                 font-size: 0.9rem;
             }
             canvas {
-                height: 300px; /* Even smaller canvas height on small mobile */
+                /* Same as above, fixed width, potential height adjustment */
             }
             #instructions {
                 font-size: 0.8rem;
@@ -321,7 +326,9 @@
                 <button id="reset-button">New Game</button>
             </div> -->
         </div>
-        <canvas id="game-canvas"></canvas>
+        <div id="canvas-wrapper" class="w-full overflow-x-auto">
+            <canvas id="game-canvas"></canvas>
+        </div>
         <div id="message-display">Click the first word to start!</div>
         <div id="instructions">
             <h3>How to Play:</h3>
@@ -366,12 +373,14 @@
         // --- Game Variables ---
         const GAME_LIVES = 5;
         const NUM_COLUMNS = 5; // Total connections needed (path length will be NUM_COLUMNS + 1 words)
-        const BASE_FONT_SIZE_REFERENCE_WIDTH = 900; // Reference width for BASE_WORD_FONT_SIZE
+        // Fixed dimensions for the game canvas, which will be scrolled if viewport is smaller
+        const CANVAS_WIDTH = 860;
+        const CANVAS_HEIGHT = 450;
+        
         const BASE_WORD_FONT_SIZE = 20;
-        const MIN_FONT_SIZE_CLAMP = 14; // Minimum font size on very small screens
         const FONT_SIZE_INCREMENT_ON_HOVER = 4; // How much bigger font gets on hover
         const WORD_BOX_PADDING = 10;
-        const MIN_PADDING_CLAMP = 5; // Minimum padding on very small screens
+        const WORD_RADIUS = 5; // For rounded corners of word boxes
 
 
         const WORD_COLOR = '#475569'; // Slate-700
@@ -382,9 +391,8 @@
         const ACTIVE_WORD_HIGHLIGHT = '#a78b5a'; // Purple for active word
         const PATH_WORD_COLOR = '#99f6e4'; // Teal-200 for words on the correct path
         const HOVER_BG_COLOR = '#c4b5fd'; // Lighter purple for hover background
-        const WORD_RADIUS = 5; // For rounded corners of word boxes - Moved to global scope
 
-        let words = []; // Array of word objects { text, x, y, width, height, isActive, isPathWord, isSelectable, column, isWrongGuess, baseFontSize, basePadding }
+        let words = []; // Array of word objects { text, x, y, width, height, isActive, isPathWord, isSelectable, column, isWrongGuess, currentFontSize, currentPadding }
         let connections = []; // Stores { startWord, endWord } for correct connections
         let currentLives = GAME_LIVES;
         let gameActive = false;
@@ -528,36 +536,32 @@
 
         // --- Utility Functions ---
 
-        // Function to get responsive font size based on canvas width
+        // These functions are simplified as canvas dimensions are now fixed
         function getResponsiveFontSize(baseFontSize) {
-            const scaleFactor = canvas.width / BASE_FONT_SIZE_REFERENCE_WIDTH;
-            return Math.max(MIN_FONT_SIZE_CLAMP, baseFontSize * scaleFactor);
+            return baseFontSize; // Words inside canvas maintain their size
         }
 
-        // Function to get responsive padding based on canvas width
         function getResponsivePadding() {
-            const scaleFactor = canvas.width / BASE_FONT_SIZE_REFERENCE_WIDTH;
-            return Math.max(MIN_PADDING_CLAMP, WORD_BOX_PADDING * scaleFactor);
+            return WORD_BOX_PADDING; // Padding inside canvas maintains its size
         }
 
         // Adjust canvas size to fit container and maintain aspect ratio
         function resizeCanvas() {
-            const container = document.getElementById('game-container');
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
+            // Set canvas drawing surface dimensions to fixed values
+            canvas.width = CANVAS_WIDTH;
+            canvas.height = CANVAS_HEIGHT;
 
-            // Recalculate properties for all words based on new canvas size
+            // Recalculate properties for all words based on the fixed canvas size
             words.forEach(word => {
-                word.currentFontSize = getResponsiveFontSize(BASE_WORD_FONT_SIZE);
-                word.currentPadding = getResponsivePadding();
+                word.currentFontSize = BASE_WORD_FONT_SIZE; // Use fixed base size
+                word.currentPadding = WORD_BOX_PADDING; // Use fixed padding
                 ctx.font = `${word.currentFontSize}px Inter`;
                 const metrics = ctx.measureText(word.text);
                 word.width = metrics.width + 2 * word.currentPadding;
                 word.height = parseInt(ctx.font) + 2 * word.currentPadding;
             });
 
-            // Recalculate positions
+            // Recalculate positions based on the fixed canvas.width and height
             positionWordsInColumns();
             drawGame();
         }
@@ -799,7 +803,7 @@
                     word.y - drawnHeight / 2,
                     drawnWidth,
                     drawnHeight,
-                    WORD_RADIUS // Now WORD_RADIUS is defined globally
+                    WORD_RADIUS
                 );
                 ctx.fill();
 
@@ -830,7 +834,7 @@
             const currentTheme = wordPaths[currentPathIndex].theme; // Get the theme
 
             if (isWin) {
-                modalTitle.textContent = "You Win! 🎉";
+                modalTitle.textContent = "You Win! �";
                 modalTitle.style.color = '#10b981'; // Green for win
                 modalTheme.textContent = `Theme: ${currentTheme}`; // Display theme
                 modalTime.textContent = `Time: ${timeString}`;
