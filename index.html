@@ -43,6 +43,29 @@
             position: relative;
         }
 
+        #site-branding {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px; /* Space below branding */
+            color: #1a365d; /* Dark blue for title */
+            font-size: 2.5rem; /* Larger title */
+            font-weight: 700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+
+        #site-logo {
+            width: 60px; /* Size of the logo */
+            height: 60px;
+            /* Animation for subtle rotation */
+            animation: rotateLogo 10s linear infinite;
+        }
+
+        @keyframes rotateLogo {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         #game-header {
             display: flex;
             justify-content: space-between;
@@ -202,6 +225,14 @@
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
+            #site-branding {
+                font-size: 1.8rem;
+                gap: 10px;
+            }
+            #site-logo {
+                width: 45px;
+                height: 45px;
+            }
             #game-container {
                 padding: 15px;
                 min-height: 500px;
@@ -238,6 +269,14 @@
         }
 
         @media (max-width: 480px) {
+            #site-branding {
+                font-size: 1.5rem;
+                gap: 8px;
+            }
+            #site-logo {
+                width: 35px;
+                height: 35px;
+            }
             #game-container {
                 padding: 10px;
             }
@@ -255,6 +294,23 @@
 </head>
 <body>
     <div id="game-container" class="relative">
+        <div id="site-branding">
+            <svg id="site-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <!-- Abstract "path" or "flow" element -->
+                <path d="M 20 50 Q 35 30 50 50 T 80 50" stroke="url(#logoGradient)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <!-- Simple "word" elements (abstract letters) -->
+                <path d="M 15 45 L 25 55 M 25 45 L 15 55" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round"/>
+                <path d="M 45 45 L 55 55 M 55 45 L 45 55" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round"/>
+                <path d="M 75 45 L 85 55 M 85 45 L 75 55" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round"/>
+            </svg>
+            <span>The Word Journey</span>
+        </div>
         <div id="game-header">
             <div id="lives-display">
                 <span id="heart-icon">❤️</span> Lives: <span id="lives-count"></span>
@@ -310,11 +366,15 @@
         // --- Game Variables ---
         const GAME_LIVES = 5;
         const NUM_COLUMNS = 5; // Total connections needed (path length will be NUM_COLUMNS + 1 words)
+        const BASE_FONT_SIZE_REFERENCE_WIDTH = 900; // Reference width for BASE_WORD_FONT_SIZE
         const BASE_WORD_FONT_SIZE = 20;
-        const HOVER_WORD_FONT_SIZE = 24; // Bigger font size on hover
-        const WORD_COLOR = '#475569'; // Slate-700
+        const MIN_FONT_SIZE_CLAMP = 14; // Minimum font size on very small screens
+        const FONT_SIZE_INCREMENT_ON_HOVER = 4; // How much bigger font gets on hover
         const WORD_BOX_PADDING = 10;
-        const WORD_RADIUS = 5; // For rounded corners of word boxes
+        const MIN_PADDING_CLAMP = 5; // Minimum padding on very small screens
+
+
+        const WORD_COLOR = '#475569'; // Slate-700
         const LINE_COLOR = '#60a5fa'; // Blue-400
         const WRONG_CHOICE_HIGHLIGHT = '#fca5a5'; // Red-300
         const WRONG_TEXT_COLOR = '#dc2626'; // Darker red for struck-out text
@@ -322,8 +382,9 @@
         const ACTIVE_WORD_HIGHLIGHT = '#a78b5a'; // Purple for active word
         const PATH_WORD_COLOR = '#99f6e4'; // Teal-200 for words on the correct path
         const HOVER_BG_COLOR = '#c4b5fd'; // Lighter purple for hover background
+        const WORD_RADIUS = 5; // For rounded corners of word boxes - Moved to global scope
 
-        let words = []; // Array of word objects { text, x, y, width, height, isActive, isPathWord, isSelectable, column, isWrongGuess }
+        let words = []; // Array of word objects { text, x, y, width, height, isActive, isPathWord, isSelectable, column, isWrongGuess, baseFontSize, basePadding }
         let connections = []; // Stores { startWord, endWord } for correct connections
         let currentLives = GAME_LIVES;
         let gameActive = false;
@@ -467,24 +528,38 @@
 
         // --- Utility Functions ---
 
+        // Function to get responsive font size based on canvas width
+        function getResponsiveFontSize(baseFontSize) {
+            const scaleFactor = canvas.width / BASE_FONT_SIZE_REFERENCE_WIDTH;
+            return Math.max(MIN_FONT_SIZE_CLAMP, baseFontSize * scaleFactor);
+        }
+
+        // Function to get responsive padding based on canvas width
+        function getResponsivePadding() {
+            const scaleFactor = canvas.width / BASE_FONT_SIZE_REFERENCE_WIDTH;
+            return Math.max(MIN_PADDING_CLAMP, WORD_BOX_PADDING * scaleFactor);
+        }
+
         // Adjust canvas size to fit container and maintain aspect ratio
         function resizeCanvas() {
             const container = document.getElementById('game-container');
             const rect = canvas.getBoundingClientRect();
             canvas.width = rect.width;
             canvas.height = rect.height;
-            // Recalculate positions after resize if game is active or won
-            if (gameActive || gameWon) {
-                // Remeasure all words based on base font size for correct initial sizing
-                ctx.font = `${BASE_WORD_FONT_SIZE}px Inter`;
-                words.forEach(word => {
-                    const metrics = ctx.measureText(word.text);
-                    word.width = metrics.width + 2 * WORD_BOX_PADDING;
-                    word.height = parseInt(ctx.font) + 2 * WORD_BOX_PADDING;
-                });
-                positionWordsInColumns(); // Use new positioning function
-                drawGame();
-            }
+
+            // Recalculate properties for all words based on new canvas size
+            words.forEach(word => {
+                word.currentFontSize = getResponsiveFontSize(BASE_WORD_FONT_SIZE);
+                word.currentPadding = getResponsivePadding();
+                ctx.font = `${word.currentFontSize}px Inter`;
+                const metrics = ctx.measureText(word.text);
+                word.width = metrics.width + 2 * word.currentPadding;
+                word.height = parseInt(ctx.font) + 2 * word.currentPadding;
+            });
+
+            // Recalculate positions
+            positionWordsInColumns();
+            drawGame();
         }
 
         // Get mouse/touch coordinates relative to the canvas
@@ -508,10 +583,15 @@
         function isPointInWord(point, word) {
             let wordWidth = word.width;
             let wordHeight = word.height;
+            // Adjust hit area if word is currently hovered for easier interaction
             if (word === hoveredWord) {
-                // For hover, temporarily expand the hit area slightly
-                wordWidth = ctx.measureText(word.text).width + 2 * WORD_BOX_PADDING + (HOVER_WORD_FONT_SIZE - BASE_WORD_FONT_SIZE);
-                wordHeight = parseInt(`${HOVER_WORD_FONT_SIZE}px Inter`) + 2 * WORD_BOX_PADDING + (HOVER_WORD_FONT_SIZE - BASE_WORD_FONT_SIZE);
+                // Temporarily calculate enlarged size for hit detection
+                const hoverFont = `${word.currentFontSize + FONT_SIZE_INCREMENT_ON_HOVER}px Inter`;
+                ctx.font = hoverFont; // Set temporarily for accurate measurement
+                const metrics = ctx.measureText(word.text);
+                wordWidth = metrics.width + 2 * (word.currentPadding + (FONT_SIZE_INCREMENT_ON_HOVER / 2)); // Adjust padding too
+                wordHeight = parseInt(hoverFont) + 2 * (word.currentPadding + (FONT_SIZE_INCREMENT_ON_HOVER / 2));
+                ctx.font = `${word.currentFontSize}px Inter`; // Reset font
             }
 
             return point.x >= word.x - wordWidth / 2 &&
@@ -567,7 +647,9 @@
                 isSelectable: true, // The very first word is selectable to start the game
                 column: 0, // Conceptual column 0
                 isPathWord: false, // Not part of the 'path' until it's connected FROM it
-                isWrongGuess: false // New property for incorrect guesses
+                isWrongGuess: false, // New property for incorrect guesses
+                currentFontSize: BASE_WORD_FONT_SIZE, // Will be updated by resizeCanvas
+                currentPadding: WORD_BOX_PADDING // Will be updated by resizeCanvas
             });
 
             // Populate words array with correct targets and distractors for subsequent columns
@@ -585,7 +667,9 @@
                     isSelectable: false, // Only selectable if in the *current* target column
                     column: i, // Conceptual column index
                     isPathWord: false, // Not yet part of the path
-                    isWrongGuess: false // New property for incorrect guesses
+                    isWrongGuess: false, // New property for incorrect guesses
+                    currentFontSize: BASE_WORD_FONT_SIZE, // Will be updated by resizeCanvas
+                    currentPadding: WORD_BOX_PADDING // Will be updated by resizeCanvas
                 });
 
                 // Add distractors for this column
@@ -603,24 +687,14 @@
                 });
             }
 
-            // Measure all words based on base font size for correct initial sizing
-            ctx.font = `${BASE_WORD_FONT_SIZE}px Inter`;
-            words.forEach(word => {
-                const metrics = ctx.measureText(word.text);
-                word.width = metrics.width + 2 * WORD_BOX_PADDING;
-                word.height = parseInt(ctx.font) + 2 * WORD_BOX_PADDING;
-            });
-
             // The actual starting word is the first word in column 0.
             // Initially, it is selectable to initiate the game.
             activeCentralWord = words.find(word => word.column === 0 && !word.isCorrectTarget); // It's not a target, it's a source.
-            // When game starts, only the first word in the first column is selectable
-            // and acts as the initial "active" word.
             activeCentralWord.isSelectable = true;
             activeCentralWord.isActive = true;
 
-            positionWordsInColumns(); // Arrange words in columns
-            drawGame(); // Draw the initial state
+            // Call resizeCanvas to set initial sizes and positions based on current canvas dimensions
+            resizeCanvas();
         }
 
         // Updates the stopwatch display
@@ -650,14 +724,19 @@
                 wordsInThisColumn.sort((a, b) => a.text.localeCompare(b.text));
 
                 // Calculate total height needed for words in this column including padding
-                const totalContentHeight = wordsInThisColumn.reduce((sum, word) => sum + word.height, 0) + (numWordsInColumn - 1) * WORD_BOX_PADDING;
+                // Use word.height which is already set based on responsive font size
+                let totalContentHeight = wordsInThisColumn.reduce((sum, word) => sum + word.height, 0);
+                if (numWordsInColumn > 0) {
+                    totalContentHeight += (numWordsInColumn - 1) * wordsInThisColumn[0].currentPadding; // Access currentPadding safely
+                }
+
 
                 let currentY = (canvasHeight / 2) - (totalContentHeight / 2); // Start Y for centering
 
                 wordsInThisColumn.forEach(word => {
                     word.x = COLUMN_X_POSITIONS[i]; // Set X position for the column
                     word.y = currentY + word.height / 2; // Center word vertically in its allocated slot
-                    currentY += word.height + WORD_BOX_PADDING; // Move Y for the next word
+                    currentY += word.height + word.currentPadding; // Move Y for the next word
                 });
             }
         }
@@ -689,13 +768,13 @@
 
             // Draw words
             words.forEach(word => {
-                let currentFont = `${BASE_WORD_FONT_SIZE}px Inter`;
+                let currentFont = `${word.currentFontSize}px Inter`;
                 let currentBgColor = '#cbd5e1'; // Default gray-300
                 let currentTextColor = WORD_COLOR;
 
                 // Apply hover effect if applicable and game is active
                 if (gameActive && word === hoveredWord) {
-                    currentFont = `${HOVER_WORD_FONT_SIZE}px Inter`;
+                    currentFont = `${word.currentFontSize + FONT_SIZE_INCREMENT_ON_HOVER}px Inter`;
                     currentBgColor = HOVER_BG_COLOR; // Lighter purple for hover
                 } else if (word === activeCentralWord) {
                     currentBgColor = ACTIVE_WORD_HIGHLIGHT; // Purple highlight for active word
@@ -709,8 +788,8 @@
 
                 ctx.font = currentFont;
                 const metrics = ctx.measureText(word.text);
-                const drawnWidth = metrics.width + 2 * WORD_BOX_PADDING;
-                const drawnHeight = parseInt(currentFont) + 2 * WORD_BOX_PADDING;
+                const drawnWidth = metrics.width + 2 * word.currentPadding; // Use currentPadding here
+                const drawnHeight = parseInt(currentFont) + 2 * word.currentPadding; // Use currentPadding here
 
                 // Draw rounded rectangle background for the word
                 ctx.fillStyle = currentBgColor;
@@ -720,7 +799,7 @@
                     word.y - drawnHeight / 2,
                     drawnWidth,
                     drawnHeight,
-                    WORD_RADIUS
+                    WORD_RADIUS // Now WORD_RADIUS is defined globally
                 );
                 ctx.fill();
 
@@ -1003,13 +1082,13 @@
 
             for (const word of selectableWords) {
                 // Temporarily set font for hit detection
-                ctx.font = `${HOVER_WORD_FONT_SIZE}px Inter`;
+                ctx.font = `${word.currentFontSize + FONT_SIZE_INCREMENT_ON_HOVER}px Inter`;
                 if (isPointInWord(mousePos, word)) {
                     foundHoveredWord = word;
                     break;
                 }
             }
-            ctx.font = `${BASE_WORD_FONT_SIZE}px Inter`; // Reset font after check
+            ctx.font = `${activeCentralWord ? activeCentralWord.currentFontSize : BASE_WORD_FONT_SIZE}px Inter`; // Reset font context accurately
 
             if (foundHoveredWord !== hoveredWord) {
                 hoveredWord = foundHoveredWord;
