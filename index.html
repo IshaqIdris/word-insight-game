@@ -67,30 +67,7 @@
             color: #4b5563; /* Gray-700 */
         }
 
-        #reset-button {
-            padding: 10px 20px; /* Increased padding */
-            background-color: #10b981; /* Green for reset */
-            color: white;
-            border: none;
-            border-radius: 12px; /* More rounded */
-            cursor: pointer;
-            font-weight: 700;
-            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s;
-            box-shadow: 0 6px 12px rgba(0, 185, 130, 0.3); /* Green shadow */
-            position: relative;
-            overflow: hidden;
-        }
-
-        #reset-button:hover {
-            background-color: #059669;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0, 185, 130, 0.4);
-        }
-
-        #reset-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
+        /* Removed #reset-button styling as the button is removed */
 
         #share-button {
             padding: 10px 20px; /* Increased padding */
@@ -226,7 +203,7 @@
                 gap: 10px;
                 margin-bottom: 15px;
             }
-            #lives-display, #message-display, #reset-button, #timer-display, #share-button {
+            #lives-display, #message-display, #timer-display { /* Removed #reset-button */
                 font-size: 1rem;
             }
             canvas {
@@ -255,7 +232,7 @@
             #game-container {
                 padding: 10px;
             }
-            #lives-display, #message-display, #reset-button, #timer-display, #share-button {
+            #lives-display, #message-display, #timer-display { /* Removed #reset-button */
                 font-size: 0.9rem;
             }
             canvas {
@@ -274,11 +251,10 @@
                 <span id="heart-icon">❤️</span> Lives: <span id="lives-count"></span>
             </div>
             <div id="timer-display">00:00</div>
-            <div class="flex items-center">
+            <!-- Removed Reset button from header -->
+            <!-- <div class="flex items-center">
                 <button id="reset-button">New Game</button>
-                <!-- Share button initially hidden in header, appears in modal -->
-                <!-- <button id="share-button" class="hidden">Share Results</button> -->
-            </div>
+            </div> -->
         </div>
         <canvas id="game-canvas"></canvas>
         <div id="message-display">Click the first word to start!</div>
@@ -290,7 +266,7 @@
                 <li>**Correct:** If you choose correctly, a line will form, and the new word will turn <span style="color: #99f6e4; font-weight: bold;">green</span> and become the active word (<span style="color: #a78bfa; font-weight: bold;">purple</span>).</li>
                 <li>**Incorrect:** A wrong guess costs you a life. The word will turn <span style="color: #ef4444; font-weight: bold;">red and be struck out</span>. You have 5 lives.</li>
                 <li>**Win:** Complete all 5 connections to win! Your time and lives remaining will be displayed.</li>
-                <li>**Restart:** Click "New Game" to play a different word path.</li>
+                <li>**Daily Puzzle:** There's a new puzzle each day!</li>
             </ul>
         </div>
     </div>
@@ -299,6 +275,7 @@
     <div id="results-modal" class="hidden">
         <div id="results-content">
             <h2 id="modal-title"></h2>
+            <p id="modal-theme"></p> <!-- Added for theme display -->
             <p id="modal-time"></p>
             <p id="modal-lives"></p>
             <button id="modal-share-button" class="mt-4 px-6 py-3 bg-blue-500 text-white rounded-lg font-bold shadow-md hover:bg-blue-600 transition-all duration-200">Share Results</button>
@@ -312,10 +289,10 @@
         const ctx = canvas.getContext('2d');
         const messageDisplay = document.getElementById('message-display');
         const livesCountDisplay = document.getElementById('lives-count');
-        const resetButton = document.getElementById('reset-button');
         const timerDisplay = document.getElementById('timer-display');
         const resultsModal = document.getElementById('results-modal');
         const modalTitle = document.getElementById('modal-title');
+        const modalTheme = document.getElementById('modal-theme'); // Added for theme display
         const modalTime = document.getElementById('modal-time');
         const modalLives = document.getElementById('modal-lives');
         const modalShareButton = document.getElementById('modal-share-button');
@@ -333,7 +310,7 @@
         const WRONG_CHOICE_HIGHLIGHT = '#fca5a5'; // Red-300
         const WRONG_TEXT_COLOR = '#dc2626'; // Darker red for struck-out text
         const LINE_WIDTH = 3;
-        const ACTIVE_WORD_HIGHLIGHT = '#a78bfa'; // Purple for active word
+        const ACTIVE_WORD_HIGHLIGHT = '#a78b5a'; // Purple for active word
         const PATH_WORD_COLOR = '#99f6e4'; // Teal-200 for words on the correct path
         const HOVER_BG_COLOR = '#c4b5fd'; // Lighter purple for hover background
 
@@ -354,10 +331,10 @@
         // --- Word Paths for Daily Puzzles ---
         // Each entry in this array corresponds to a unique daily puzzle.
         // We will cycle through these based on the current date.
-        // The first puzzle (index 0) is the requested tech theme.
         const wordPaths = [
-            // Day 1: Tech Theme
+            // Puzzle 0 (Tech Theme)
             {
+                theme: "Technology",
                 path: ["COMPUTER", "SOFTWARE", "CODE", "ALGORITHM", "DATA", "NETWORK"],
                 distractors: [
                     ["HARDWARE", "MOUSE", "SCREEN", "KEYBOARD", "PRINTER"],
@@ -367,8 +344,9 @@
                     ["INFORMATION", "FACT", "FIGURE", "STATISTIC", "RECORD"]
                 ]
             },
-            // Day 2: Nature Cycle
+            // Puzzle 1 (Nature Cycle)
             {
+                theme: "Nature Cycle",
                 path: ["SEED", "SPROUT", "PLANT", "FLOWER", "FRUIT", "HARVEST"],
                 distractors: [
                     ["SOIL", "WATER", "SUN", "AIR", "POT"],
@@ -378,8 +356,9 @@
                     ["APPLE", "BERRY", "VEGETABLE", "GRAIN", "CROPS"]
                 ]
             },
-            // Day 3: Kitchen Process
+            // Puzzle 2 (Kitchen Process)
             {
+                theme: "Kitchen Process",
                 path: ["RECIPE", "INGREDIENTS", "MIX", "BAKE", "SERVE", "EAT"],
                 distractors: [
                     ["COOKBOOK", "OVEN", "KNIFE", "FORK", "PLATE"],
@@ -389,8 +368,9 @@
                     ["TABLE", "CHAIR", "NAPKIN", "DRINK", "SIP"]
                 ]
             },
-            // Day 4: Writing Process
+            // Puzzle 3 (Writing Process)
             {
+                theme: "Writing Process",
                 path: ["IDEA", "DRAFT", "EDIT", "PUBLISH", "READ", "REVIEW"],
                 distractors: [
                     ["THOUGHT", "CONCEPT", "BRAIN", "MUSE", "SPARK"],
@@ -400,8 +380,9 @@
                     ["UNDERSTAND", "STUDY", "LEARN", "ABSORB", "ANALYZE"]
                 ]
             },
-            // Day 5: Weather Phenomena
+            // Puzzle 4 (Weather Phenomena)
             {
+                theme: "Weather Phenomena",
                 path: ["SUN", "CLOUD", "RAIN", "RIVER", "OCEAN", "EVAPORATION"],
                 distractors: [
                     ["STAR", "MOON", "PLANET", "GALAXY", "COMET"],
@@ -411,8 +392,9 @@
                     ["SEA", "BAY", "GULF", "WAVE", "TIDE"]
                 ]
             },
-            // Day 6: Human Body System
+            // Puzzle 5 (Human Body System)
             {
+                theme: "Human Body System",
                 path: ["BRAIN", "NERVES", "MUSCLES", "BONES", "HEART", "BLOOD"],
                 distractors: [
                     ["SKULL", "MIND", "THOUGHT", "CEREBRUM", "CEREBELLUM"],
@@ -422,8 +404,9 @@
                     ["VESSEL", "VEIN", "ARTERY", "PLASMA", "CELL"]
                 ]
             },
-            // Day 7: Abstract Concept Progression
+            // Puzzle 6 (Abstract Concept Progression)
             {
+                theme: "Abstract Concepts",
                 path: ["QUESTION", "ANSWER", "KNOWLEDGE", "UNDERSTANDING", "WISDOM", "TRUTH"],
                 distractors: [
                     ["QUERY", "ASK", "WONDER", "INQUIRY", "PUZZLE"],
@@ -431,6 +414,44 @@
                     ["LEARNING", "INFORMATION", "EDUCATION", "STUDY", "DATA"],
                     ["COMPREHEND", "GRASP", "INSIGHT", "CLARITY", "PERCEPTION"],
                     ["EXPERIENCE", "JUDGMENT", "DISCERNMENT", "PRUDENCE", "MATURITY"]
+                ]
+            },
+            // New puzzles start here (index 7 onwards)
+
+            // Puzzle 7: Football Match
+            {
+                theme: "Football Match",
+                path: ["PLAYER", "TEAM", "MATCH", "GOAL", "VICTORY", "CELEBRATION"],
+                distractors: [
+                    ["COACH", "FAN", "STADIUM", "JERSEY", "BALL"],
+                    ["PRACTICE", "TRAINING", "DRILL", "SCRIMMAGE", "LEAGUE"],
+                    ["WHISTLE", "FOUL", "OFFSIDE", "CORNER", "PENALTY"],
+                    ["DEFEAT", "DRAW", "LOSS", "SCOREBOARD", "REFEREE"],
+                    ["TROPHY", "MEDAL", "CHAMPION", "PARADE", "INTERVIEW"]
+                ]
+            },
+            // Puzzle 8: Product Development
+            {
+                theme: "Product Development",
+                path: ["CONCEPT", "DESIGN", "PROTOTYPE", "TEST", "LAUNCH", "FEEDBACK"],
+                distractors: [
+                    ["IDEA", "INNOVATION", "RESEARCH", "BRAINSTORM", "PROBLEM"],
+                    ["BLUEPRINT", "SKETCH", "DRAWING", "MOCKUP", "SPECIFICATION"],
+                    ["MODEL", "SAMPLE", "VERSION", "BUILD", "ASSEMBLY"],
+                    ["DEBUG", "ANALYZE", "EVALUATE", "REVIEW", "FAIL"],
+                    ["ADVERTISE", "SELL", "PROMOTE", "MARKET", "COMPETE"]
+                ]
+            },
+            // Puzzle 9: Coffee Making
+            {
+                theme: "Coffee Making",
+                path: ["BEAN", "GRIND", "BREW", "POUR", "SIP", "AWAKE"],
+                distractors: [
+                    ["PLANT", "CROP", "HARVEST", "ROAST", "BAG"],
+                    ["MASH", "CHOP", "CRUSH", "MILL", "BLEND"],
+                    ["BOIL", "HEAT", "STEAM", "FILTER", "PRESS"],
+                    ["CUP", "MUG", "SAUCER", "SPOON", "SUGAR"],
+                    ["DRINK", "SWALLOW", "GULP", "TASTE", "ENJOY"]
                 ]
             }
         ];
@@ -718,15 +739,19 @@
             const seconds = Math.floor((elapsedTime % 60000) / 1000);
             const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
+            const currentTheme = wordPaths[currentPathIndex].theme; // Get the theme
+
             if (isWin) {
                 modalTitle.textContent = "You Win! 🎉";
                 modalTitle.style.color = '#10b981'; // Green for win
+                modalTheme.textContent = `Theme: ${currentTheme}`; // Display theme
                 modalTime.textContent = `Time: ${timeString}`;
                 modalLives.textContent = `Lives Left: ${currentLives}/${GAME_LIVES}`;
                 triggerConfetti(); // Start confetti animation
             } else {
                 modalTitle.textContent = "Game Over! 💔";
                 modalTitle.style.color = '#ef4444'; // Red for lose
+                modalTheme.textContent = `Theme: ${currentTheme}`; // Display theme
                 modalTime.textContent = `Time: ${timeString}`;
                 modalLives.textContent = `Lives Left: ${currentLives}/${GAME_LIVES}`;
             }
@@ -748,15 +773,17 @@
             const seconds = Math.floor((elapsedTime % 60000) / 1000);
             const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-            let summary = `The Word Journey Results:\n`; // Updated game name
+            const currentTheme = wordPaths[currentPathIndex].theme; // Get the theme
+
+            let summary = `The Word Journey Results (Theme: ${currentTheme}):\n`; // Updated with theme
             if (gameWon) {
-                summary += `🎉 VICTORY! �\n`;
+                summary += `🎉 VICTORY! 🎉\n`;
                 summary += `Path completed in ${timeString} with ${currentLives} lives left!\n`;
             } else {
                 summary += `💔 GAME OVER 💔\n`;
                 summary += `Failed after ${connections.length} connections in ${timeString}.`;
             }
-            summary += `\nPlay The Word Journey!`; // Updated game name
+            summary += `\nPlay The Word Journey!`;
 
             // Use document.execCommand for wider compatibility in iframes
             const tempTextArea = document.createElement('textarea');
@@ -920,6 +947,14 @@
 
         // --- Event Handlers ---
 
+        // Added event listener to the modal background to close it
+        resultsModal.addEventListener('click', (e) => {
+            // Check if the click occurred directly on the modal background, not its content
+            if (e.target === resultsModal) {
+                hideResultsModal();
+            }
+        });
+
         canvas.addEventListener('mousedown', (e) => {
             if (!gameActive) return;
             const mousePos = getMousePos(e);
@@ -991,8 +1026,7 @@
         });
 
 
-        // Reset button listener
-        resetButton.addEventListener('click', initGame);
+        // Removed Reset button listener (as the button is removed)
         modalShareButton.addEventListener('click', generateShareSummary);
 
         // --- Initial Setup & Resizing ---
@@ -1005,4 +1039,3 @@
     </script>
 </body>
 </html>
-�
