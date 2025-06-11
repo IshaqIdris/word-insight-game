@@ -3,515 +3,1006 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guess the Famous Person</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>The Word Journey</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --primary-blue: #3498db;
-            --dark-blue: #2980b9;
-            --light-blue: #ecf0f1;
-            --accent-green: #2ecc71;
-            --text-dark: #2c3e50;
-            --text-light: #ffffff;
-            --background-light: #f4f7f6;
-            --card-background: #ffffff;
-            --border-color: #bdc3c7;
-            --shadow-light: 0 8px 25px rgba(0, 0, 0, 0.15);
-            --shadow-dark: 0 12px 35px rgba(0, 0, 0, 0.25);
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
 
         body {
             font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top left, #e0f7fa, #f0f4f8, #e0f7fa); /* Subtle gradient background */
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, var(--light-blue), var(--background-light));
             margin: 0;
+            overflow: hidden; /* Prevent body scroll */
+        }
+
+        #game-container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             padding: 20px;
-            box-sizing: border-box;
-            color: var(--text-dark);
-            overflow: hidden; /* Prevent scrollbar from background gradient */
-        }
-
-        .game-container {
-            background-color: var(--card-background);
-            border-radius: 25px;
-            box-shadow: var(--shadow-light);
-            padding: 40px;
-            width: 100%;
-            max-width: 550px;
-            text-align: center;
             display: flex;
             flex-direction: column;
-            gap: 25px;
-            transition: all 0.3s ease-in-out;
+            align-items: center;
+            max-width: 90vw; /* Responsive width */
+            width: 900px; /* Increased width for columns */
+            min-height: 600px; /* Min height for desktop */
+            position: relative;
         }
 
-        .game-container:hover {
-            box-shadow: var(--shadow-dark);
+        #game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 0 10px;
         }
 
-        h1 {
-            color: var(--primary-blue);
-            font-size: 2.5em;
-            margin-bottom: 10px;
+        #lives-display {
+            font-size: 1.25rem;
             font-weight: 700;
-            letter-spacing: -0.02em;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
-        }
-
-        .clue-box {
-            background: linear-gradient(145deg, #e0f2f7, #c6e9f0); /* Softer gradient */
-            border: 2px solid var(--primary-blue);
-            border-radius: 18px;
-            padding: 25px;
-            min-height: 120px;
+            color: #ef4444; /* Red for lives */
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: flex-start; /* Align clues to the left */
-            font-size: 1.15em;
-            color: var(--text-dark);
-            font-weight: 500;
-            text-align: left;
-            overflow-y: auto;
-            max-height: 280px;
-            gap: 12px;
-            box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
+            align-items: center;
+            gap: 5px;
         }
 
-        .clue-box:hover {
-            transform: translateY(-2px);
-            box-shadow: inset 0 5px 10px rgba(0, 0, 0, 0.12);
+        #message-display {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #3b82f6; /* Blue for messages */
+            text-align: center;
+            flex-grow: 1; /* Allow it to take available space */
+            margin-top: 15px; /* Space between canvas and message */
         }
 
-        .clue-item {
-            padding: 5px 0;
-            border-bottom: 1px dashed rgba(var(--primary-blue), 0.4);
-            width: 100%;
-            text-align: left;
-            opacity: 0; /* Initially hidden for animation */
-            animation: fadeInClue 0.5s forwards;
+        #timer-display {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #4b5563; /* Gray-700 */
         }
 
-        .clue-item:last-child {
-            border-bottom: none;
-        }
-
-        @keyframes fadeInClue {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        input[type="text"] {
-            padding: 18px 20px;
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            font-size: 1.1em;
-            width: calc(100% - 40px); /* Account for padding */
-            box-sizing: border-box;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-            outline: none;
-            color: var(--text-dark);
-            background-color: var(--background-light);
-        }
-
-        input[type="text"]:focus {
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 10px rgba(52, 152, 219, 0.4);
-            background-color: var(--card-background);
-        }
-
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        button {
-            background: linear-gradient(145deg, var(--primary-blue), var(--dark-blue));
-            color: var(--text-light);
-            padding: 16px 30px;
+        #reset-button {
+            padding: 10px 20px; /* Increased padding */
+            background-color: #10b981; /* Green for reset */
+            color: white;
             border: none;
-            border-radius: 12px;
-            font-size: 1.15em;
-            font-weight: 600;
+            border-radius: 12px; /* More rounded */
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+            font-weight: 700;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s;
+            box-shadow: 0 6px 12px rgba(0, 185, 130, 0.3); /* Green shadow */
             position: relative;
             overflow: hidden;
-            letter-spacing: 0.02em;
         }
 
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 9px 25px rgba(0, 0, 0, 0.35);
+        #reset-button:hover {
+            background-color: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 185, 130, 0.4);
         }
 
-        button:active {
+        #reset-button:active {
             transform: translateY(0);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        button#newGame {
-            background: linear-gradient(145deg, var(--accent-green), #27ae60);
+        #share-button {
+            padding: 10px 20px; /* Increased padding */
+            background-color: #3b82f6; /* Blue for share */
+            color: white;
+            border: none;
+            border-radius: 12px; /* More rounded */
+            cursor: pointer;
+            font-weight: 700;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s;
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3); /* Blue shadow */
+            margin-left: 15px; /* Space from reset button */
+            position: relative;
+            overflow: hidden;
         }
 
-        button#shareButton {
-            background: linear-gradient(145deg, #f39c12, #e67e22); /* Orange/Yellow gradient */
-            display: none; /* Hidden by default */
+        #share-button:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.4);
         }
 
-
-        .message-box {
-            min-height: 40px;
-            font-size: 1.1em;
-            font-weight: 600;
-            color: var(--text-dark);
-            transition: color 0.3s ease, transform 0.3s ease;
+        #share-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .loading-spinner {
-            border: 4px solid #f3f3f3; /* Light grey */
-            border-top: 4px solid var(--primary-blue); /* Blue */
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-            display: none; /* Hidden by default */
+        canvas {
+            border: 2px solid #e2e8f0; /* Light border */
+            border-radius: 15px;
+            background-color: #f8fafc; /* Lighter canvas background */
+            display: block;
+            touch-action: none; /* Disable default touch actions */
+            flex-grow: 1; /* Allow canvas to fill available space */
+            width: 100%; /* Make canvas responsive */
+            max-width: 860px; /* Max width matching container */
+            height: 450px; /* Fixed height for canvas, adjusted by JS for aspect ratio */
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        #instructions {
+            margin-top: 20px;
+            background-color: #e0f2f7; /* Light blue instruction box */
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 0.9rem;
+            color: #2c5282; /* Darker blue text */
+            line-height: 1.5;
+            max-width: 860px;
+            width: 100%;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+            text-align: left; /* Align text left within instructions */
+        }
+        #instructions h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1a365d;
+        }
+        #instructions ul {
+            list-style: disc;
+            margin-left: 20px;
+        }
+        #instructions li {
+            margin-bottom: 5px;
+        }
+
+        /* Results Modal */
+        #results-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black overlay */
+            backdrop-filter: blur(5px); /* Frosted glass effect */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* On top of everything */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        #results-modal.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #results-content {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 80%;
+            transform: scale(0.9);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        #results-modal.visible #results-content {
+            transform: scale(1);
+        }
+
+        #results-content h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #10b981; /* Green for win, red for lose */
+        }
+        #results-content p {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #4b5563;
+        }
+        #results-content #modal-share-button {
+            margin-top: 20px;
+            padding: 12px 25px;
+            font-size: 1.1rem;
         }
 
         /* Responsive adjustments */
-        @media (max-width: 600px) {
-            .game-container {
-                padding: 25px;
-                gap: 20px;
-                border-radius: 18px;
+        @media (max-width: 768px) {
+            #game-container {
+                padding: 15px;
+                min-height: 500px;
+                width: 95vw; /* Wider on mobile */
             }
-
-            h1 {
-                font-size: 2em;
+            #game-header {
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 15px;
             }
-
-            input[type="text"], button {
-                font-size: 1em;
-                padding: 14px;
-                border-radius: 10px;
+            #lives-display, #message-display, #reset-button, #timer-display, #share-button {
+                font-size: 1rem;
             }
+            canvas {
+                height: 350px; /* Smaller canvas height on mobile */
+            }
+            #instructions {
+                font-size: 0.85rem;
+                padding: 10px 15px;
+            }
+            #results-content {
+                padding: 20px;
+            }
+            #results-content h2 {
+                font-size: 1.6rem;
+            }
+            #results-content p {
+                font-size: 1rem;
+            }
+            #results-content #modal-share-button {
+                padding: 10px 20px;
+                font-size: 1rem;
+            }
+        }
 
-            .clue-box, .message-box {
-                font-size: 0.95em;
+        @media (max-width: 480px) {
+            #game-container {
+                padding: 10px;
+            }
+            #lives-display, #message-display, #reset-button, #timer-display, #share-button {
+                font-size: 0.9rem;
+            }
+            canvas {
+                height: 300px; /* Even smaller canvas height on small mobile */
+            }
+            #instructions {
+                font-size: 0.8rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <h1>Guess the Famous Person</h1>
-        <div class="clue-box" id="clues">
-            <!-- Clues will appear here -->
+    <div id="game-container" class="relative">
+        <div id="game-header">
+            <div id="lives-display">
+                <span id="heart-icon">❤️</span> Lives: <span id="lives-count"></span>
+            </div>
+            <div id="timer-display">00:00</div>
+            <div class="flex items-center">
+                <button id="reset-button">New Game</button>
+                <!-- Share button initially hidden in header, appears in modal -->
+                <!-- <button id="share-button" class="hidden">Share Results</button> -->
+            </div>
         </div>
-        <div class="loading-spinner" id="loadingSpinner"></div>
-        <input type="text" id="guessInput" placeholder="Enter your guess...">
-        <button id="submitGuess">Submit Guess</button>
-        <div class="message-box" id="message"></div>
-        <div class="button-group">
-            <button id="shareButton">Share Result</button>
-            <button id="newGame" style="background: linear-gradient(145deg, #4CAF50, #2E8B57);">New Game</button>
+        <canvas id="game-canvas"></canvas>
+        <div id="message-display">Click the first word to start!</div>
+        <div id="instructions">
+            <h3>How to Play:</h3>
+            <ul>
+                <li>**Goal:** Connect words horizontally across 5 columns to complete the path.</li>
+                <li>**Connect:** Click on a word in the next column that you think logically connects to the currently highlighted <span style="color: #a78bfa; font-weight: bold;">purple</span> word.</li>
+                <li>**Correct:** If you choose correctly, a line will form, and the new word will turn <span style="color: #99f6e4; font-weight: bold;">green</span> and become the active word (<span style="color: #a78bfa; font-weight: bold;">purple</span>).</li>
+                <li>**Incorrect:** A wrong guess costs you a life. The word will turn <span style="color: #ef4444; font-weight: bold;">red and be struck out</span>. You have 5 lives.</li>
+                <li>**Win:** Complete all 5 connections to win! Your time and lives remaining will be displayed.</li>
+                <li>**Restart:** Click "New Game" to play a different word path.</li>
+            </ul>
         </div>
     </div>
 
-    <script>
-        const guessInput = document.getElementById('guessInput');
-        const submitGuessBtn = document.getElementById('submitGuess');
-        const newGameBtn = document.getElementById('newGame');
-        const shareButton = document.getElementById('shareButton'); // New share button
-        const cluesDiv = document.getElementById('clues');
-        const messageDiv = document.getElementById('message');
-        const loadingSpinner = document.getElementById('loadingSpinner');
+    <!-- Results Modal -->
+    <div id="results-modal" class="hidden">
+        <div id="results-content">
+            <h2 id="modal-title"></h2>
+            <p id="modal-time"></p>
+            <p id="modal-lives"></p>
+            <button id="modal-share-button" class="mt-4 px-6 py-3 bg-blue-500 text-white rounded-lg font-bold shadow-md hover:bg-blue-600 transition-all duration-200">Share Results</button>
+        </div>
+    </div>
 
-        // Global variables for game state
-        let famousPeopleData = [
+
+    <script>
+        // --- Canvas Setup ---
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const messageDisplay = document.getElementById('message-display');
+        const livesCountDisplay = document.getElementById('lives-count');
+        const resetButton = document.getElementById('reset-button');
+        const timerDisplay = document.getElementById('timer-display');
+        const resultsModal = document.getElementById('results-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalTime = document.getElementById('modal-time');
+        const modalLives = document.getElementById('modal-lives');
+        const modalShareButton = document.getElementById('modal-share-button');
+
+
+        // --- Game Variables ---
+        const GAME_LIVES = 5;
+        const NUM_COLUMNS = 5; // Total connections needed (path length will be NUM_COLUMNS + 1 words)
+        const BASE_WORD_FONT_SIZE = 20;
+        const HOVER_WORD_FONT_SIZE = 24; // Bigger font size on hover
+        const WORD_COLOR = '#475569'; // Slate-700
+        const WORD_BOX_PADDING = 10;
+        const WORD_RADIUS = 5; // For rounded corners of word boxes
+        const LINE_COLOR = '#60a5fa'; // Blue-400
+        const WRONG_CHOICE_HIGHLIGHT = '#fca5a5'; // Red-300
+        const WRONG_TEXT_COLOR = '#dc2626'; // Darker red for struck-out text
+        const LINE_WIDTH = 3;
+        const ACTIVE_WORD_HIGHLIGHT = '#a78bfa'; // Purple for active word
+        const PATH_WORD_COLOR = '#99f6e4'; // Teal-200 for words on the correct path
+        const HOVER_BG_COLOR = '#c4b5fd'; // Lighter purple for hover background
+
+        let words = []; // Array of word objects { text, x, y, width, height, isActive, isPathWord, isSelectable, column, isWrongGuess }
+        let connections = []; // Stores { startWord, endWord } for correct connections
+        let currentLives = GAME_LIVES;
+        let gameActive = false;
+        let gameWon = false;
+        let currentPathIndex = 0; // Index in the `wordPaths` array
+        let currentColumnProgress = 0; // Tracks which column we are currently connecting FROM (0 to NUM_COLUMNS-1)
+        let activeCentralWord = null; // The word currently active, connecting FROM
+        let hoveredWord = null; // Stores the word currently being hovered over
+
+        let startTime = null; // Changed to null, starts on first guess
+        let elapsedTime = 0;
+        let timerInterval = null;
+
+        // --- Word Paths for Daily Puzzles ---
+        // Each entry in this array corresponds to a unique daily puzzle.
+        // We will cycle through these based on the current date.
+        // The first puzzle (index 0) is the requested tech theme.
+        const wordPaths = [
+            // Day 1: Tech Theme
             {
-                name: "Taylor Swift",
-                clues: [
-                    "This person is known for their songwriting.",
-                    "They broke several streaming records in the 2020s.",
-                    "Their fans are often called 'Swifties'.",
-                    "They famously re-recorded several of their early albums.",
-                    "Their most recent album is 'The Tortured Poets Department'."
+                path: ["COMPUTER", "SOFTWARE", "CODE", "ALGORITHM", "DATA", "NETWORK"],
+                distractors: [
+                    ["HARDWARE", "MOUSE", "SCREEN", "KEYBOARD", "PRINTER"],
+                    ["APPLIANCE", "PROGRAM", "APPLICATION", "VIRUS", "DEBUG"],
+                    ["LANGUAGE", "SYNTAX", "BUG", "SCRIPT", "TERMINAL"],
+                    ["FORMULA", "LOGIC", "MATH", "ANALYZE", "COMPUTE"],
+                    ["INFORMATION", "FACT", "FIGURE", "STATISTIC", "RECORD"]
                 ]
             },
+            // Day 2: Nature Cycle
             {
-                name: "Beyoncé",
-                clues: [
-                    "This artist is a global music icon.",
-                    "They were part of a very famous girl group before their solo career.",
-                    "Known for powerful vocals and intricate stage performances.",
-                    "Released a visual album that broke the internet.",
-                    "Often referred to as 'Queen Bey'."
+                path: ["SEED", "SPROUT", "PLANT", "FLOWER", "FRUIT", "HARVEST"],
+                distractors: [
+                    ["SOIL", "WATER", "SUN", "AIR", "POT"],
+                    ["ROOT", "STEM", "LEAF", "BRANCH", "NUTRIENT"],
+                    ["TREE", "BUSH", "SHRUB", "GRASS", "GARDEN"],
+                    ["PETAL", "POLLEN", "NECTAR", "BUD", "BLOOM"],
+                    ["APPLE", "BERRY", "VEGETABLE", "GRAIN", "CROPS"]
                 ]
             },
+            // Day 3: Kitchen Process
             {
-                name: "Elon Musk",
-                clues: [
-                    "This individual is a a prominent figure in the tech industry.",
-                    "They are involved with electric vehicles and space exploration.",
-                    "Known for controversial social media presence.",
-                    "Founder of SpaceX and Tesla.",
-                    "Owns a popular social media platform formerly known as Twitter."
+                path: ["RECIPE", "INGREDIENTS", "MIX", "BAKE", "SERVE", "EAT"],
+                distractors: [
+                    ["COOKBOOK", "OVEN", "KNIFE", "FORK", "PLATE"],
+                    ["SPICE", "WATER", "FLOUR", "SUGAR", "SALT"],
+                    ["STIR", "CHOP", "SLICE", "PEEL", "BLENDER"],
+                    ["GRILL", "BOIL", "FRY", "ROAST", "STEAM"],
+                    ["TABLE", "CHAIR", "NAPKIN", "DRINK", "SIP"]
                 ]
             },
+            // Day 4: Writing Process
             {
-                name: "Mark Zuckerberg",
-                clues: [
-                    "This person revolutionized social networking.",
-                    "They dropped out of Harvard University.",
-                    "Their company owns Instagram and WhatsApp.",
-                    "Known for wearing grey t-shirts.",
-                    "Co-founded Facebook."
+                path: ["IDEA", "DRAFT", "EDIT", "PUBLISH", "READ", "REVIEW"],
+                distractors: [
+                    ["THOUGHT", "CONCEPT", "BRAIN", "MUSE", "SPARK"],
+                    ["OUTLINE", "PLAN", "SKETCH", "WRITE", "TYPE"],
+                    ["REVISE", "PROOFREAD", "CORRECT", "IMPROVE", "GRAMMAR"],
+                    ["PRINT", "DISTRIBUTE", "RELEASE", "LAUNCH", "SHARE"],
+                    ["UNDERSTAND", "STUDY", "LEARN", "ABSORB", "ANALYZE"]
                 ]
             },
+            // Day 5: Weather Phenomena
             {
-                name: "LeBron James",
-                clues: [
-                    "This athlete is a living basketball legend.",
-                    "Often compared to Michael Jordan.",
-                    "Has played for the Cavaliers, Heat, and Lakers.",
-                    "Known as 'King James'.",
-                    "Holds the NBA all-time scoring record."
+                path: ["SUN", "CLOUD", "RAIN", "RIVER", "OCEAN", "EVAPORATION"],
+                distractors: [
+                    ["STAR", "MOON", "PLANET", "GALAXY", "COMET"],
+                    ["FOG", "MIST", "HAZE", "SMOG", "SKY"],
+                    ["DRIZZLE", "STORM", "THUNDER", "LIGHTNING", "SNOW"],
+                    ["STREAM", "LAKE", "POND", "CANAL", "WATERFALL"],
+                    ["SEA", "BAY", "GULF", "WAVE", "TIDE"]
                 ]
             },
-             {
-                name: "Rihanna",
-                clues: [
-                    "This artist is a successful musician and entrepreneur.",
-                    "They come from Barbados.",
-                    "Known for hits like 'Umbrella' and 'Diamonds'.",
-                    "Founder of Fenty Beauty.",
-                    "Performed at the Super Bowl LVII halftime show."
+            // Day 6: Human Body System
+            {
+                path: ["BRAIN", "NERVES", "MUSCLES", "BONES", "HEART", "BLOOD"],
+                distractors: [
+                    ["SKULL", "MIND", "THOUGHT", "CEREBRUM", "CEREBELLUM"],
+                    ["SPINE", "SPINAL CORD", "SENSORY", "MOTOR", "REFLEX"],
+                    ["TENDON", "LIGAMENT", "FIBER", "STRENGTH", "EXERCISE"],
+                    ["SKELETON", "MARROW", "JOINT", "CARTILAGE", "FRACTURE"],
+                    ["VESSEL", "VEIN", "ARTERY", "PLASMA", "CELL"]
                 ]
             },
+            // Day 7: Abstract Concept Progression
             {
-                name: "Dwayne Johnson",
-                clues: [
-                    "This person is a globally recognized actor and former athlete.",
-                    "Known for their muscular physique and charisma.",
-                    "Started their career in professional wrestling.",
-                    "Often referred to as 'The Rock'.",
-                    "Starred in the 'Jumanji' and 'Fast & Furious' franchises."
-                ]
-            },
-            {
-                name: "Kim Kardashian",
-                clues: [
-                    "This individual rose to fame through a reality television show.",
-                    "They are part of a well-known celebrity family.",
-                    "Known for their business ventures in fashion and beauty.",
-                    "Has a strong social media presence.",
-                    "Studied to become a lawyer."
-                ]
-            },
-            {
-                name: "Billie Eilish",
-                clues: [
-                    "This young artist gained widespread fame in the late 2010s.",
-                    "Known for their distinct vocal style and unique fashion.",
-                    "Often collaborates with their brother on music.",
-                    "Won multiple Grammy Awards for her debut album.",
-                    "Sang the theme song for a James Bond film, 'No Time to Die'."
-                ]
-            },
-            {
-                name: "Harry Styles",
-                clues: [
-                    "This artist was a member of a popular boy band.",
-                    "Known for their flamboyant fashion sense and solo music career.",
-                    "Starred in films like 'Dunkirk' and 'Don't Worry Darling'.",
-                    "Had a massive hit with the song 'Watermelon Sugar'.",
-                    "Often performs in brightly colored, glittery outfits."
+                path: ["QUESTION", "ANSWER", "KNOWLEDGE", "UNDERSTANDING", "WISDOM", "TRUTH"],
+                distractors: [
+                    ["QUERY", "ASK", "WONDER", "INQUIRY", "PUZZLE"],
+                    ["REPLY", "RESPONSE", "SOLUTION", "STATEMENT", "FACT"],
+                    ["LEARNING", "INFORMATION", "EDUCATION", "STUDY", "DATA"],
+                    ["COMPREHEND", "GRASP", "INSIGHT", "CLARITY", "PERCEPTION"],
+                    ["EXPERIENCE", "JUDGMENT", "DISCERNMENT", "PRUDENCE", "MATURITY"]
                 ]
             }
         ];
-        let currentPerson = {};
-        let currentClueIndex = 0;
-        let maxClues = 5;
-        let guessCount = 0; // New variable to track guesses
 
-        // Function to display messages to the user
-        function displayMessage(msg, color = 'initial') {
-            messageDiv.textContent = msg;
-            messageDiv.style.color = color;
-            messageDiv.style.transform = 'scale(1.05)';
-            setTimeout(() => {
-                messageDiv.style.transform = 'scale(1)';
-            }, 200);
+        // --- Utility Functions ---
+
+        // Adjust canvas size to fit container and maintain aspect ratio
+        function resizeCanvas() {
+            const container = document.getElementById('game-container');
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            // Recalculate positions after resize if game is active or won
+            if (gameActive || gameWon) {
+                // Remeasure all words based on base font size for correct initial sizing
+                ctx.font = `${BASE_WORD_FONT_SIZE}px Inter`;
+                words.forEach(word => {
+                    const metrics = ctx.measureText(word.text);
+                    word.width = metrics.width + 2 * WORD_BOX_PADDING;
+                    word.height = parseInt(ctx.font) + 2 * WORD_BOX_PADDING;
+                });
+                positionWordsInColumns(); // Use new positioning function
+                drawGame();
+            }
         }
 
-        // Function to update the displayed clues
-        function updateClues() {
-            cluesDiv.innerHTML = ''; // Clear previous clues
-            if (currentPerson.clues && currentPerson.clues.length > 0) {
-                for (let i = 0; i <= currentClueIndex && i < currentPerson.clues.length; i++) {
-                    const clueItem = document.createElement('div');
-                    clueItem.classList.add('clue-item');
-                    clueItem.textContent = `Clue ${i + 1}: ${currentPerson.clues[i]}`;
-                    cluesDiv.appendChild(clueItem);
+        // Get mouse/touch coordinates relative to the canvas
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        // Check if a point is inside a word's bounding box (accounting for potential hover size)
+        function isPointInWord(point, word) {
+            let wordWidth = word.width;
+            let wordHeight = word.height;
+            if (word === hoveredWord) {
+                // For hover, temporarily expand the hit area slightly
+                wordWidth = ctx.measureText(word.text).width + 2 * WORD_BOX_PADDING + (HOVER_WORD_FONT_SIZE - BASE_WORD_FONT_SIZE);
+                wordHeight = parseInt(`${HOVER_WORD_FONT_SIZE}px Inter`) + 2 * WORD_BOX_PADDING + (HOVER_WORD_FONT_SIZE - BASE_WORD_FONT_SIZE);
+            }
+
+            return point.x >= word.x - wordWidth / 2 &&
+                   point.x <= word.x + wordWidth / 2 &&
+                   point.y >= word.y - wordHeight / 2 &&
+                   point.y <= word.y + wordHeight / 2;
+        }
+
+
+        // --- Game Logic ---
+
+        // Initializes a new game
+        function initGame() {
+            currentLives = GAME_LIVES;
+            connections = [];
+            gameActive = true;
+            gameWon = false;
+            currentColumnProgress = 0; // Reset column progress
+            activeCentralWord = null;
+            hoveredWord = null;
+            messageDisplay.textContent = "Click the first word to start!"; // Initial message for starting
+            livesCountDisplay.textContent = currentLives;
+            hideResultsModal(); // Ensure modal is hidden
+
+            // Reset timer state
+            elapsedTime = 0;
+            timerDisplay.textContent = '00:00';
+            if (timerInterval) clearInterval(timerInterval); // Stop any running timer
+            timerInterval = null; // Ensure timer is not running
+
+
+            // Select puzzle based on current day of the year (or day of week for simple cycle)
+            // Using day of the year for a unique puzzle for each day, looping through available puzzles
+            const today = new Date();
+            const startOfYear = new Date(today.getFullYear(), 0, 0);
+            const diff = today.getTime() - startOfYear.getTime();
+            const oneDay = 1000 * 60 * 60 * 24;
+            const dayOfYear = Math.floor(diff / oneDay);
+            currentPathIndex = dayOfYear % wordPaths.length; // Ensures it cycles through available puzzles
+
+            const selectedPathData = wordPaths[currentPathIndex];
+            const pathWords = selectedPathData.path;
+            const pathDistractors = selectedPathData.distractors;
+
+            // Initialize all words that will be used in this game
+            words = [];
+            // Add the initial central word to column 0
+            words.push({
+                text: pathWords[0],
+                x: 0, y: 0, width: 0, height: 0,
+                isActive: true, // This is the active central word
+                isCorrectTarget: false,
+                isSelectable: true, // The very first word is selectable to start the game
+                column: 0, // Conceptual column 0
+                isPathWord: false, // Not part of the 'path' until it's connected FROM it
+                isWrongGuess: false // New property for incorrect guesses
+            });
+
+            // Populate words array with correct targets and distractors for subsequent columns
+            for (let i = 1; i <= NUM_COLUMNS; i++) {
+                const correctWordText = pathWords[i];
+                // Distractors are for the target column, indexed i-1 in distractors array
+                const currentDistractors = selectedPathData.distractors[i - 1];
+
+                // Create the correct target word for this column
+                words.push({
+                    text: correctWordText,
+                    x: 0, y: 0, width: 0, height: 0,
+                    isActive: false,
+                    isCorrectTarget: true, // Mark as the correct word for its column
+                    isSelectable: false, // Only selectable if in the *current* target column
+                    column: i, // Conceptual column index
+                    isPathWord: false, // Not yet part of the path
+                    isWrongGuess: false // New property for incorrect guesses
+                });
+
+                // Add distractors for this column
+                currentDistractors.forEach(distractorText => {
+                    words.push({
+                        text: distractorText,
+                        x: 0, y: 0, width: 0, height: 0,
+                        isActive: false,
+                        isCorrectTarget: false, // This is a distractor
+                        isSelectable: false, // Only selectable if in the *current* target column
+                        column: i, // Conceptual column index
+                        isPathWord: false, // Not part of the path
+                        isWrongGuess: false // New property for incorrect guesses
+                    });
+                });
+            }
+
+            // Measure all words based on base font size for correct initial sizing
+            ctx.font = `${BASE_WORD_FONT_SIZE}px Inter`;
+            words.forEach(word => {
+                const metrics = ctx.measureText(word.text);
+                word.width = metrics.width + 2 * WORD_BOX_PADDING;
+                word.height = parseInt(ctx.font) + 2 * WORD_BOX_PADDING;
+            });
+
+            // The actual starting word is the first word in column 0.
+            // Initially, it is selectable to initiate the game.
+            activeCentralWord = words.find(word => word.column === 0 && !word.isCorrectTarget); // It's not a target, it's a source.
+            // When game starts, only the first word in the first column is selectable
+            // and acts as the initial "active" word.
+            activeCentralWord.isSelectable = true;
+            activeCentralWord.isActive = true;
+
+            positionWordsInColumns(); // Arrange words in columns
+            drawGame(); // Draw the initial state
+        }
+
+        // Updates the stopwatch display
+        function updateTimer() {
+            elapsedTime = Date.now() - startTime;
+            const minutes = Math.floor(elapsedTime / 60000);
+            const seconds = Math.floor((elapsedTime % 60000) / 1000);
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+
+        // Positions words dynamically in columns, ensuring no overlap for currently visible words
+        function positionWordsInColumns() {
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            // Calculate column X positions
+            const COLUMN_X_POSITIONS = [];
+            for (let i = 0; i <= NUM_COLUMNS; i++) {
+                COLUMN_X_POSITIONS[i] = (i * (canvasWidth / (NUM_COLUMNS + 1))) + ((canvasWidth / (NUM_COLUMNS + 1)) / 2);
+            }
+
+            for (let i = 0; i <= NUM_COLUMNS; i++) {
+                const wordsInThisColumn = words.filter(word => word.column === i);
+                const numWordsInColumn = wordsInThisColumn.length;
+
+                // Sort words by text for consistent vertical order
+                wordsInThisColumn.sort((a, b) => a.text.localeCompare(b.text));
+
+                // Calculate total height needed for words in this column including padding
+                const totalContentHeight = wordsInThisColumn.reduce((sum, word) => sum + word.height, 0) + (numWordsInColumn - 1) * WORD_BOX_PADDING;
+
+                let currentY = (canvasHeight / 2) - (totalContentHeight / 2); // Start Y for centering
+
+                wordsInThisColumn.forEach(word => {
+                    word.x = COLUMN_X_POSITIONS[i]; // Set X position for the column
+                    word.y = currentY + word.height / 2; // Center word vertically in its allocated slot
+                    currentY += word.height + WORD_BOX_PADDING; // Move Y for the next word
+                });
+            }
+        }
+
+        // Draw everything on the canvas
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+
+            // Draw column lines
+            const COLUMN_WIDTH = canvas.width / (NUM_COLUMNS + 1);
+            ctx.strokeStyle = '#e2e8f0'; // Light gray for column lines
+            ctx.lineWidth = 1;
+            for (let i = 1; i <= NUM_COLUMNS; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * COLUMN_WIDTH, 0);
+                ctx.lineTo(i * COLUMN_WIDTH, canvas.height);
+                ctx.stroke();
+            }
+
+            // Draw existing correct connections
+            connections.forEach(conn => {
+                ctx.beginPath();
+                ctx.moveTo(conn.startWord.x + conn.startWord.width / 2, conn.startWord.y); // Draw from right edge
+                ctx.lineTo(conn.endWord.x - conn.endWord.width / 2, conn.endWord.y);   // Draw to left edge
+                ctx.strokeStyle = LINE_COLOR;
+                ctx.lineWidth = LINE_WIDTH;
+                ctx.stroke();
+            });
+
+            // Draw words
+            words.forEach(word => {
+                let currentFont = `${BASE_WORD_FONT_SIZE}px Inter`;
+                let currentBgColor = '#cbd5e1'; // Default gray-300
+                let currentTextColor = WORD_COLOR;
+
+                // Apply hover effect if applicable and game is active
+                if (gameActive && word === hoveredWord) {
+                    currentFont = `${HOVER_WORD_FONT_SIZE}px Inter`;
+                    currentBgColor = HOVER_BG_COLOR; // Lighter purple for hover
+                } else if (word === activeCentralWord) {
+                    currentBgColor = ACTIVE_WORD_HIGHLIGHT; // Purple highlight for active word
+                } else if (word.isPathWord) { // New condition for words already in the correct path
+                    currentBgColor = PATH_WORD_COLOR; // Green-ish color for path words
+                } else if (word.isWrongGuess) { // New condition for incorrectly guessed words
+                    currentBgColor = WRONG_CHOICE_HIGHLIGHT; // Red for wrong guess background
+                    currentTextColor = WRONG_TEXT_COLOR; // Darker red for text
                 }
-            } else {
-                cluesDiv.textContent = 'No clues available. Select New Game.';
-            }
-        }
 
-        // Function to start a new game
-        async function startNewGame() {
-            // Reset game state
-            currentClueIndex = 0;
-            guessCount = 0; // Reset guess count for new game
-            guessInput.value = '';
-            guessInput.disabled = false;
-            submitGuessBtn.disabled = false;
-            shareButton.style.display = 'none'; // Hide share button
-            displayMessage('Guess the famous person!', 'var(--text-dark)');
-            cluesDiv.innerHTML = ''; // Clear clues immediately
 
-            // Pick a random famous person from the predefined data
-            const randomIndex = Math.floor(Math.random() * famousPeopleData.length);
-            currentPerson = famousPeopleData[randomIndex]; // Assign the whole object
+                ctx.font = currentFont;
+                const metrics = ctx.measureText(word.text);
+                const drawnWidth = metrics.width + 2 * WORD_BOX_PADDING;
+                const drawnHeight = parseInt(currentFont) + 2 * WORD_BOX_PADDING;
 
-            // Display the first clue
-            if (currentPerson.clues.length > 0) {
-                updateClues();
-            } else {
-                displayMessage('Error: No clues found for this person. Try New Game.', 'red');
-                guessInput.disabled = true;
-                submitGuessBtn.disabled = true;
-            }
-        }
+                // Draw rounded rectangle background for the word
+                ctx.fillStyle = currentBgColor;
+                ctx.beginPath();
+                ctx.roundRect(
+                    word.x - drawnWidth / 2,
+                    word.y - drawnHeight / 2,
+                    drawnWidth,
+                    drawnHeight,
+                    WORD_RADIUS
+                );
+                ctx.fill();
 
-        // Function to generate the share message
-        function generateShareMessage(won) {
-            let message = `I tried to guess a famous person!`;
-            if (won) {
-                message += ` I guessed "${currentPerson.name}" in ${guessCount} tries!`;
-            } else {
-                message += ` I couldn't guess "${currentPerson.name}". It took me ${guessCount} tries.`;
-            }
-            message += ` #GuessThePersonGame`; // Hashtag for social media
-            // Add a link to the game if hosted (replace with your actual GitHub Pages URL)
-            // For now, we'll assume it's just the text.
-            // message += `\nPlay it here: [YOUR_GITHUB_PAGES_URL]`;
-            return message;
-        }
+                // Draw word text
+                ctx.fillStyle = currentTextColor;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(word.text, word.x, word.y);
 
-        // Event listener for submitting a guess
-        submitGuessBtn.addEventListener('click', async () => {
-            const guess = guessInput.value.trim();
-            if (!guess) {
-                displayMessage('Please enter a guess!', 'orange');
-                return;
-            }
-
-            // Increment guess count on each attempt
-            guessCount++;
-
-            // Clean and normalize both the guess and the correct answer for flexible comparison.
-            const cleanGuess = guess.toLowerCase()
-                                  .replace(/^(mr\.|ms\.|mrs\.|dr\.)\s+/i, '')
-                                  .replace(/\s+(jr\.|sr\.|iii|ii)$/i, '')
-                                  .replace(/[^a-z0-9\s]/g, '')
-                                  .trim();
-
-            const cleanAnswer = currentPerson.name.toLowerCase()
-                                   .replace(/^(mr\.|ms\.|mrs\.|dr\.)\s+/i, '')
-                                   .replace(/\s+(jr\.|sr\.|iii|ii)$/i, '')
-                                   .replace(/[^a-z0-9\s]/g, '')
-                                   .trim();
-
-            let isCorrect = false;
-
-            // Condition 1: Exact match of the cleaned strings
-            if (cleanGuess === cleanAnswer) {
-                isCorrect = true;
-            } else {
-                // Condition 2: Check if the cleaned answer contains the cleaned guess as a substring.
-                if (cleanGuess.length > 0 && cleanAnswer.includes(cleanGuess)) {
-                    isCorrect = true;
-                } else {
-                    // Condition 3: Check for word-level matching, allowing for different word orders.
-                    const guessWords = cleanGuess.split(/\s+/).filter(word => word.length > 0);
-                    const answerWords = cleanAnswer.split(/\s+/).filter(word => word.length > 0);
-
-                    if (guessWords.length > 0 && guessWords.every(word => answerWords.includes(word))) {
-                        isCorrect = true;
-                    }
+                // Draw strike-through line for incorrectly guessed words
+                if (word.isWrongGuess) {
+                    ctx.beginPath();
+                    ctx.moveTo(word.x - drawnWidth / 2 + 5, word.y); // Start slightly in from left edge
+                    ctx.lineTo(word.x + drawnWidth / 2 - 5, word.y); // End slightly in from right edge
+                    ctx.strokeStyle = WRONG_TEXT_COLOR; // Use same color as text for strike
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
                 }
-            }
+            });
+        }
 
-            if (isCorrect) {
-                displayMessage(`Congratulations! You guessed "${currentPerson.name}" correctly!`, 'var(--accent-green)');
-                guessInput.disabled = true;
-                submitGuessBtn.disabled = true;
-                shareButton.style.display = 'block'; // Show share button on win
+        // Shows the results modal
+        function showResultsModal(isWin) {
+            const minutes = Math.floor(elapsedTime / 60000);
+            const seconds = Math.floor((elapsedTime % 60000) / 1000);
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            if (isWin) {
+                modalTitle.textContent = "You Win! 🎉";
+                modalTitle.style.color = '#10b981'; // Green for win
+                modalTime.textContent = `Time: ${timeString}`;
+                modalLives.textContent = `Lives Left: ${currentLives}/${GAME_LIVES}`;
+                triggerConfetti(); // Start confetti animation
             } else {
-                currentClueIndex++;
-                if (currentClueIndex < maxClues && currentClueIndex < currentPerson.clues.length) {
-                    displayMessage(`Incorrect! Revealing Clue ${currentClueIndex + 1}.`, 'red');
-                    updateClues();
-                } else {
-                    displayMessage(`Game over! The person was "${currentPerson.name}". Better luck next time!`, 'red');
-                    guessInput.disabled = true;
-                    submitGuessBtn.disabled = true;
-                    shareButton.style.display = 'block'; // Show share button on loss
-                }
+                modalTitle.textContent = "Game Over! 💔";
+                modalTitle.style.color = '#ef4444'; // Red for lose
+                modalTime.textContent = `Time: ${timeString}`;
+                modalLives.textContent = `Lives Left: ${currentLives}/${GAME_LIVES}`;
             }
-            guessInput.value = ''; // Clear input after guess
-        });
+            resultsModal.classList.remove('hidden');
+            resultsModal.classList.add('visible');
+        }
 
-        // Event listener for Share button
-        shareButton.addEventListener('click', () => {
-            let shareText;
-            // Check if the user won (guessInput is disabled and message is green)
-            if (guessInput.disabled && messageDiv.style.color === 'var(--accent-green)') {
-                shareText = generateShareMessage(true);
+        // Hides the results modal
+        function hideResultsModal() {
+            resultsModal.classList.remove('visible');
+            resultsModal.classList.add('hidden');
+            cancelAnimationFrame(confettiAnimationId); // Stop confetti
+        }
+
+
+        // Generates and copies a shareable summary to clipboard
+        function generateShareSummary() {
+            const minutes = Math.floor(elapsedTime / 60000);
+            const seconds = Math.floor((elapsedTime % 60000) / 1000);
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            let summary = `The Word Journey Results:\n`; // Updated game name
+            if (gameWon) {
+                summary += `🎉 VICTORY! �\n`;
+                summary += `Path completed in ${timeString} with ${currentLives} lives left!\n`;
             } else {
-                shareText = generateShareMessage(false);
+                summary += `💔 GAME OVER 💔\n`;
+                summary += `Failed after ${connections.length} connections in ${timeString}.`;
             }
+            summary += `\nPlay The Word Journey!`; // Updated game name
 
-            // Copy to clipboard
+            // Use document.execCommand for wider compatibility in iframes
             const tempTextArea = document.createElement('textarea');
-            tempTextArea.value = shareText;
+            tempTextArea.value = summary;
             document.body.appendChild(tempTextArea);
             tempTextArea.select();
             document.execCommand('copy');
             document.body.removeChild(tempTextArea);
 
-            displayMessage('Result copied to clipboard!', 'var(--primary-blue)');
-        });
+            modalShareButton.textContent = 'Copied!';
+            setTimeout(() => {
+                modalShareButton.textContent = 'Share Results';
+            }, 1500); // Revert button text after 1.5 seconds
+        }
+
+        // Check if a clicked word is the correct connection for the current column
+        function checkConnection(clickedWord) {
+            // If the game is won or lost, prevent further interaction
+            if (!gameActive) return;
+
+            // Handle the very first click on the initial active word (column 0) to start the game flow
+            if (currentColumnProgress === 0 && clickedWord === activeCentralWord) {
+                 messageDisplay.textContent = "Make your first connection!";
+                 activeCentralWord.isPathWord = true; // Mark as path word now
+                 activeCentralWord.isSelectable = false; // Cannot re-select the source word
+                 // Enable words in column 1 for selection
+                 words.filter(word => word.column === 1).forEach(word => word.isSelectable = true);
+                 drawGame();
+                 return; // Exit as this was just the game initiation click
+            }
+
+            // Start timer on first *actual* guess (i.e., clicking a word in the second column)
+            if (timerInterval === null && clickedWord.column === 1) {
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+
+            // Proceed with actual connection logic if a selectable word in the *next* column is clicked
+            const selectedPathData = wordPaths[currentPathIndex];
+            const expectedTargetWordText = selectedPathData.path[currentColumnProgress + 1];
+
+            if (clickedWord.text === expectedTargetWordText && clickedWord.column === currentColumnProgress + 1) {
+                // Correct connection
+                connections.push({ startWord: activeCentralWord, endWord: clickedWord });
+                activeCentralWord.isActive = false; // Deactivate old active word
+                
+                clickedWord.isActive = true; // New central word becomes active
+                clickedWord.isPathWord = true; // Mark new word as part of the path
+                activeCentralWord = clickedWord; // Update the active word
+
+                currentColumnProgress++; // Move to the next column
+                messageDisplay.textContent = "Great job! Connection made! 🎉";
+
+                // Update selectability: only words in the *new* next column should be selectable
+                words.forEach(word => {
+                    word.isSelectable = (word.column === currentColumnProgress + 1);
+                });
+
+                if (currentColumnProgress >= NUM_COLUMNS) {
+                    // All columns connected, win the game
+                    gameWon = true;
+                    gameActive = false;
+                    clearInterval(timerInterval); // Stop the timer on win
+                    showResultsModal(true); // Show win modal
+                }
+            } else if (clickedWord.column === currentColumnProgress + 1) { // Only penalize if clicking in the current target column
+                // Incorrect connection
+                currentLives--;
+                livesCountDisplay.textContent = currentLives;
+                messageDisplay.textContent = "Wrong connection! 💔";
+
+                clickedWord.isSelectable = false; // Make the wrong guess unselectable
+                clickedWord.isWrongGuess = true; // Mark it as a wrong guess for drawing purposes
+                
+                if (currentLives <= 0) {
+                    gameActive = false;
+                    clearInterval(timerInterval); // Stop the timer on lose
+                    showResultsModal(false); // Show lose modal
+                }
+            }
+            drawGame(); // Redraw after any state change
+        }
+
+        // --- Confetti Animation ---
+        const confetti = [];
+        const NUM_CONFETTI = 50;
+        const GRAVITY = 0.5;
+        const TERMINAL_VELOCITY = 10;
+        const DRAG = 0.075;
+        let confettiAnimationId = null;
+
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        function createConfetti() {
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722'];
+            for (let i = 0; i < NUM_CONFETTI; i++) {
+                confetti.push({
+                    x: random(0, canvas.width),
+                    y: random(-canvas.height, 0), // Start above canvas
+                    r: random(5, 10), // Radius
+                    color: colors[Math.floor(random(0, colors.length))],
+                    vx: random(-5, 5), // Velocity X
+                    vy: random(0, 5) // Velocity Y
+                });
+            }
+        }
+
+        function drawConfetti() {
+            confetti.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+            });
+        }
+
+        function updateConfetti() {
+            for (let i = confetti.length - 1; i >= 0; i--) {
+                const p = confetti[i];
+
+                p.vy += GRAVITY;
+                p.vy = Math.min(p.vy, TERMINAL_VELOCITY);
+                p.vx *= (1 - DRAG);
+                p.vy *= (1 - DRAG);
+
+                p.x += p.vx;
+                p.y += p.vy;
+
+                // Remove confetti when it goes off screen
+                if (p.y > canvas.height + p.r || p.x < -p.r || p.x > canvas.width + p.r) {
+                    confetti.splice(i, 1);
+                }
+            }
+        }
+
+        function animateConfetti() {
+            if (!gameWon && confetti.length === 0) { // Stop if not won and no confetti left
+                cancelAnimationFrame(confettiAnimationId);
+                confettiAnimationId = null;
+                return;
+            }
+
+            drawGame(); // Draw game state first
+            drawConfetti();
+            updateConfetti();
+
+            if (confetti.length > 0 || gameWon) { // Keep animating if there's confetti or still celebrating win
+                confettiAnimationId = requestAnimationFrame(animateConfetti);
+            }
+        }
+
+        function triggerConfetti() {
+            confetti.length = 0; // Clear existing confetti
+            createConfetti();
+            if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId); // Stop old animation if running
+            confettiAnimationId = requestAnimationFrame(animateConfetti);
+        }
 
 
-        // Allow pressing Enter to submit guess
-        guessInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Prevent default form submission
-                submitGuessBtn.click();
+        // --- Event Handlers ---
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (!gameActive) return;
+            const mousePos = getMousePos(e);
+            const clickedWord = words.find(word =>
+                isPointInWord(mousePos, word) &&
+                word.isSelectable // Only selectable if it's in the next column (set by game logic)
+            );
+
+            if (clickedWord) {
+                checkConnection(clickedWord);
             }
         });
 
-        // Event listener for starting a new game
-        newGameBtn.addEventListener('click', startNewGame);
+        canvas.addEventListener('touchstart', (e) => {
+            if (!gameActive) return;
+            e.preventDefault(); // Prevent scrolling
+            const touchPos = getMousePos(e);
+            const clickedWord = words.find(word =>
+                isPointInWord(touchPos, word) &&
+                word.isSelectable
+            );
 
-        // Initialize the game when the page loads
-        window.onload = startNewGame;
+            if (clickedWord) {
+                checkConnection(clickedWord);
+            }
+        }, { passive: false });
+
+
+        // Handle mouse movement for hover effect
+        canvas.addEventListener('mousemove', (e) => {
+            if (!gameActive) return;
+            const mousePos = getMousePos(e);
+            let foundHoveredWord = null;
+
+            // Only check words in the next column for hover (or the very first word if game not started)
+            const selectableWords = words.filter(word => word.isSelectable);
+
+            for (const word of selectableWords) {
+                // Temporarily set font for hit detection
+                ctx.font = `${HOVER_WORD_FONT_SIZE}px Inter`;
+                if (isPointInWord(mousePos, word)) {
+                    foundHoveredWord = word;
+                    break;
+                }
+            }
+            ctx.font = `${BASE_WORD_FONT_SIZE}px Inter`; // Reset font after check
+
+            if (foundHoveredWord !== hoveredWord) {
+                hoveredWord = foundHoveredWord;
+                drawGame(); // Redraw only if hover state changed
+            }
+        });
+
+        // Clear hover effect when mouse leaves canvas
+        canvas.addEventListener('mouseout', () => {
+            if (hoveredWord) {
+                hoveredWord = null;
+                drawGame();
+            }
+        });
+
+        // For touch devices, clear hover equivalent (though touch is click-driven)
+        canvas.addEventListener('touchend', (e) => {
+            // After touch, clear any active hover state
+            if (hoveredWord) {
+                hoveredWord = null;
+                drawGame();
+            }
+        });
+
+
+        // Reset button listener
+        resetButton.addEventListener('click', initGame);
+        modalShareButton.addEventListener('click', generateShareSummary);
+
+        // --- Initial Setup & Resizing ---
+        window.addEventListener('load', () => {
+            resizeCanvas(); // Set initial canvas size
+            initGame();     // Start the first game
+        });
+
+        window.addEventListener('resize', resizeCanvas); // Adjust canvas on window resize
     </script>
 </body>
 </html>
+�
